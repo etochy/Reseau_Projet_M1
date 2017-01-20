@@ -86,7 +86,6 @@ exit(1);
     adresse_locale.sin_port = htons(ptr_service->s_port);
     /*-----------------------------------------------------------*/
     /* SOLUTION 2 : utiliser un nouveau numero de port */
-    /*
     adresse_locale.sin_port = htons(5000);
     /*-----------------------------------------------------------*/
     printf("numero de port pour la connexion au serveur : %d \n", 

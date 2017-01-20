@@ -1,7 +1,7 @@
 all : client server
 
-client : client.c
-	g++ -std=c++11 -pthread -o hello main.cpp semaphore.o
+client : client_exemple.c
+	gcc -o clientApp client_exemple.c
 
-server : semaphore.cpp semaphore.h
-	g++ -std=c++11 -pthread -c semaphore.cpp
+server : server_exemple.c
+	gcc -o serverApp server_exemple.c
