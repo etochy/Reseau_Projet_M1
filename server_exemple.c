@@ -108,15 +108,25 @@ exit(1);
 /* adresse_client_courant sera renseignée par accept via les infos du connect */
             if ((nouv_socket_descriptor = 
                 accept(socket_descriptor, 
-                 (sockaddr*)(&adresse_client_courant),
-                 &longueur_adresse_courante))
-               < 0) {
+                   (sockaddr*)(&adresse_client_courant),
+                   &longueur_adresse_courante))
+             < 0) {
                 perror("erreur : impossible d'accepter la connexion avec le client.");
             exit(1);
         }
 /* traitement du message */
-        printf("reception d'un message.\n");
-        renvoi(nouv_socket_descriptor);
-        close(nouv_socket_descriptor);
+
+        // !!!!!!!!!!!!!! Attention fork bizarre
+        if(fork() == 0){//pere
+            printf("reception d'un message. PERE\n");
+            renvoi(nouv_socket_descriptor);
+            close(nouv_socket_descriptor);
+        }
+        else{//fils
+            printf("reception d'un message. FILS\n");
+            renvoi(nouv_socket_descriptor);
+            close(nouv_socket_descriptor);
+        }
+        
     }    
 }
