@@ -60,6 +60,10 @@ main(int argc, char **argv) {
 /* nom de la machine locale */
     gethostname(machine,TAILLE_MAX_NOM);
 /* recuperation du nom de la machine */
+
+    int b = -1;
+
+
     /* recuperation de la structure d'adresse en utilisant le nom */
     if ((ptr_hote = gethostbyname(machine)) == NULL) {
         perror("erreur : impossible de trouver le serveur a partir de son nom.");
@@ -104,6 +108,7 @@ exit(1);
         listen(socket_descriptor,5);
     /* attente des connexions et traitement des donnees recues */
         for(;;) {
+            b = fork();
             longueur_adresse_courante = sizeof(adresse_client_courant);
 /* adresse_client_courant sera renseignée par accept via les infos du connect */
             if ((nouv_socket_descriptor = 
@@ -115,9 +120,24 @@ exit(1);
             exit(1);
         }
 /* traitement du message */
-        printf("reception d'un message.\n");
 
-        renvoi(nouv_socket_descriptor);
+        // !!!!!!!!!!!!!! Attention fork bizarre
+        
+        if(b == -1){
+            perror("print fail");
+        }
+        else if(b > 0){//pere
+
+            printf("reception d'un message. PERE\n");
+            renvoi(nouv_socket_descriptor);
+            //close(nouv_socket_descriptor);
+        }
+        else{//fils
+
+            printf("reception d'un message. FILS\n");
+            renvoi(nouv_socket_descriptor);
+            //close(nouv_socket_descriptor);
+        }
         close(nouv_socket_descriptor);
     }    
 }
