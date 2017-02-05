@@ -19,10 +19,12 @@ typedef struct sockaddr_in sockaddr_in;
 typedef struct hostent hostent;
 typedef struct servent servent;
 /*------------------------------------------------------*/
-void renvoi (int sock) {
+void * renvoi (void * soc) {
     char buffer[256];
     int longueur;
-    if ((longueur = read(sock, buffer, sizeof(buffer))) <= 0) 
+    int *tmp = (int *)soc;
+    int client = *tmp;
+    if ((longueur = read(client, buffer, sizeof(buffer))) <= 0) 
         return;
     printf("message lu : %s \n", buffer);
 //    buffer[0] = 'R';
@@ -33,7 +35,7 @@ void renvoi (int sock) {
     printf("renvoi du message traite.\n");
     /* mise en attente du programme pour simuler un delai de transmission */
     sleep(3);
-    write(sock,buffer,strlen(buffer)+1);    
+    write(client,buffer,strlen(buffer)+1);    
     printf("message envoye. \n");       
     return;
 }
@@ -42,58 +44,14 @@ void renvoi (int sock) {
 
     //-------------------------- thread -----------------------------
 
-void *thread_1 (void *arg){
+void *thread_1(void *arg)
+{
     printf("Nous sommes dans le thread.\n");
-
-    int 
-    socket_descriptor, 
-/* descripteur de socket */
-    nouv_socket_descriptor, 
-/* [nouveau] descripteur de socket */
-    longueur_adresse_thread; 
-/* longueur d'adresse courante d'un client */
-    sockaddr_in 
-    adresse_locale, 
-/* structure d'adresse locale*/
-    adresse_client_courant; 
-/* adresse client courant */
-    hostent*
-    ptr_hote; 
-/* les infos recuperees sur la machine hote */
-    servent*
-    ptr_service; 
-/* les infos recuperees sur le service de la machine */
-    char 
-    machine[TAILLE_MAX_NOM+1]; 
-/* nom de la machine locale */
-    gethostname(machine,TAILLE_MAX_NOM);
-/* recuperation du nom de la machine */
-
-    for(;;) {
-
-        longueur_adresse_thread = sizeof(adresse_client_courant);
-/* adresse_client_courant sera renseignée par accept via les infos du connect */
-        if ((nouv_socket_descriptor = 
-            accept(socket_descriptor, 
-               (sockaddr*)(&adresse_client_courant),
-               &longueur_adresse_courante))
-         < 0) {
-            perror("erreur : impossible d'accepter la connexion avec le client.");
-        exit(1);
-    }
-/* traitement du message */
-
-    printf("reception d'un message. PERE\n");
-    renvoi(nouv_socket_descriptor);
-            //close(nouv_socket_descriptor);
-    close(nouv_socket_descriptor);
-
 
     /* Pour enlever le warning */
     (void) arg;
     pthread_exit(NULL);
 }
-
 
 
 /*------------------------------------------------------*/
@@ -115,12 +73,16 @@ main(int argc, char **argv) {
 /* les infos recuperees sur la machine hote */
     servent*
     ptr_service; 
+
+  //  int* psocket_descriptor = &socket_descriptor;
 /* les infos recuperees sur le service de la machine */
     char 
     machine[TAILLE_MAX_NOM+1]; 
 /* nom de la machine locale */
     gethostname(machine,TAILLE_MAX_NOM);
 /* recuperation du nom de la machine */
+
+    pthread_t thread1;
 
     /* recuperation de la structure d'adresse en utilisant le nom */
     if ((ptr_hote = gethostbyname(machine)) == NULL) {
@@ -151,7 +113,7 @@ exit(1);
     adresse_locale.sin_port = htons(5000);
     /*-----------------------------------------------------------*/
     printf("numero de port pour la connexion au serveur : %d \n", 
-   ntohs(adresse_locale.sin_port) /*ntohs(ptr_service->s_port)*/);
+    ntohs(adresse_locale.sin_port) /*ntohs(ptr_service->s_port)*/);
     /* creation de la socket */
         if ((socket_descriptor = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
             perror("erreur : impossible de creer la socket de connexion avec le client.");
@@ -179,9 +141,9 @@ exit(1);
         }
 /* traitement du message */
 
-        printf("reception d'un message. PERE\n");
-        renvoi(nouv_socket_descriptor);
-            //close(nouv_socket_descriptor);
+        pthread_create (&thread1, NULL, renvoi, (int*) &nouv_socket_descriptor);
+        printf("reception d'un message. thread1\n");
+        pthread_join(thread1, NULL);
         close(nouv_socket_descriptor);
     }    
 

@@ -13,4 +13,4 @@ server_fork : server_exemple_fork.c
 	gcc -o serverApp_fork server_exemple_fork.c
 
 server_thread : server_exemple_thread.c
-	gcc -o serverApp_fork server_exemple_fork.c -lpthread
+	gcc -o serverApp_thread server_exemple_thread.c -lpthread
