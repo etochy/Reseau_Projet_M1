@@ -18,14 +18,24 @@ typedef struct sockaddr sockaddr;
 typedef struct sockaddr_in sockaddr_in;
 typedef struct hostent hostent;
 typedef struct servent servent;
+
+struct varRenvoi{
+    void * soc;
+    void * compteurTab;
+    void * position;
+};
+
 /*------------------------------------------------------*/
-void * renvoi (void * soc, void * compteurTab, void * position) {
+void * renvoi (void * varV) {
+
+    struct varRenvoi *var = (struct varRenvoi*)varV;
+
     char buffer[256];
     int longueur;
-    int **tmp = (int **)soc;
-    int * tmp2 = (int *)compteurTab;
+    int **tmp = (int **)(*var).soc;
+    int * tmp2 = (int *)(*var).compteurTab;
     int compteur = tmp2;
-    tmp2 = (int *)position;
+    tmp2 = (int *)(*var).position;
     int pos = tmp2;
 
     int client = tmp[pos];
@@ -180,8 +190,15 @@ printf("numero de port pour la connexion au serveur : %d \n",
  }
 
 //--------------
+ struct varRenvoi *var;
 
- pthread_create (&thread1, NULL, renvoi, (int**) &tabentier,(int *)&compteurTab, (int *)position);
+ var = malloc(sizeof(struct varRenvoi));
+ (*var).soc = (int**) &tabentier;
+ (*var).compteurTab = (int *)&compteurTab;
+ (*var).position = (int *)position;
+
+
+ pthread_create (&thread1, NULL, renvoi, (void*)var);
  printf("reception d'un message. thread1\n");
  pthread_join(thread1, NULL);
  close(nouv_socket_descriptor);
