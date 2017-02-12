@@ -19,6 +19,15 @@ typedef struct sockaddr_in sockaddr_in;
 typedef struct hostent hostent;
 typedef struct servent servent;
 
+//-------Var Globales
+
+int compteurTab = 1;
+int * tabentier = NULL ,*temp;
+int position=0;
+
+//--------------
+
+
 struct varRenvoi{
     void * soc;
     void * compteurTab;
@@ -31,28 +40,66 @@ void * renvoi (void * varV) {
     struct varRenvoi *var = (struct varRenvoi*)varV;
 
     char buffer[256];
+
     int longueur;
+
+
+/*
     int **tmp = (int **)(*var).soc;
     int * tmp2 = (int *)(*var).compteurTab;
     int compteur = tmp2;
     tmp2 = (int *)(*var).position;
     int pos = tmp2;
-
     int client = tmp[pos];
+*/
+    int * tmp = (int *)varV;
+    int client = tmp;
+
     if ((longueur = read(client, buffer, sizeof(buffer))) <= 0) 
         return;
     printf("message lu : %s \n", buffer);
+
+//---------------------------------------------------------------------------------------------------
+
+/* Redimensionnement*/
+
+    temp = realloc (tabentier, compteurTab+1 * sizeof(int ) );
+    compteurTab ++;
+
+    if ( temp == NULL )
+    {
+        fprintf(stderr,"Reallocation impossible");
+        free(tabentier);
+        exit(EXIT_FAILURE);
+    }
+    else
+    {
+     tabentier = temp;
+ }
+
+
 //    buffer[0] = 'R';
 //    buffer[1] = 'E';
-    buffer[longueur] = '#';
-    buffer[longueur+1] ='\0';
-    printf("message apres traitement : %s \n", buffer);  
-    printf("renvoi du message traite.\n");
+ buffer[longueur] = '#';
+ buffer[longueur+1] ='\0';
+ printf("message apres traitement : %s \n", buffer);  
+ printf("renvoi du message traite.\n");
     /* mise en attente du programme pour simuler un delai de transmission */
-    sleep(3);
-    write(client,buffer,strlen(buffer)+1);    
-    printf("message envoye. \n");       
-    return;
+ sleep(3);
+
+
+
+/* Ajout d'un élement */
+
+ tabentier[compteurTab -1 ] = client;
+
+ for ( int i = 0 ; i < compteurTab ; i++ )
+ {
+     write(client,buffer,strlen(buffer)+1);    
+     printf("message envoye. \n");  
+ }
+
+ return;
 }
 /*------------------------------------------------------*/
 
@@ -77,10 +124,6 @@ main(int argc, char **argv) {
     ptr_service; 
 
   // ------------------------------------------- TAB
-
-    int compteurTab = 1;
-    int * tabentier = NULL ,*temp;
-    int position=0;
 
 /* Création d'un tableau de 1 entiers */
     
@@ -162,45 +205,19 @@ printf("numero de port pour la connexion au serveur : %d \n",
         exit(1);
     }
 /* traitement du message */
-//--------------
-
-/* Redimensionnement*/
-
-    temp = realloc (tabentier, compteurTab+1 * sizeof(int ) );
-    compteurTab ++;
-
-    if ( temp == NULL )
-    {
-     fprintf(stderr,"Reallocation impossible");
-     free(tabentier);
-     exit(EXIT_FAILURE);
- }
- else
- {
-     tabentier = temp;
- }
-
-/* Ajout d'un élement */
-
- tabentier[compteurTab -1 ] = nouv_socket_descriptor;
-
- for ( int i = 0 ; i < compteurTab ; i++ )
- {
-     printf(" tabentier[%d] = %d \n", i , tabentier[i] );
- }
 
 //--------------
- struct varRenvoi *var;
+    struct varRenvoi *var;
 
- var = malloc(sizeof(struct varRenvoi));
- (*var).soc = (int**) &tabentier;
- (*var).compteurTab = (int *)&compteurTab;
- (*var).position = (int *)position;
+    var = malloc(sizeof(struct varRenvoi));
+    (*var).soc = (int**) &tabentier;
+    (*var).compteurTab = (int *)&compteurTab;
+    (*var).position = (int *)position;
 
 
- pthread_create (&thread1, NULL, renvoi, (void*)var);
- printf("reception d'un message. thread1\n");
- pthread_join(thread1, NULL);
- close(nouv_socket_descriptor);
+    pthread_create (&thread1, NULL, renvoi, (void*)nouv_socket_descriptor);
+
+    pthread_join(thread1, NULL);
+    close(nouv_socket_descriptor);
 }    
 }
