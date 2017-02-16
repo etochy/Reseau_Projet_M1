@@ -46,44 +46,45 @@ char msg[40] = {0};
 
 void * void_reception(void * arg){
 // --------------- Thread reception ----------------
-    printf("th_reception \n");
+   // printf("th_reception \n");
 
     sleep(3);
 
     /* lecture de la reponse en provenance du serveur */
     
     while((longueur = read(socket_descriptor, buffer, sizeof(buffer))) > 0) {
-        printf("serveur : \n");
+        printf("\nserveur : \n");
         write(1,buffer,longueur);
         printf("\n");
+        printf("\nMessage : \n");
     }
     
 // ------------------------------
     pthread_exit(NULL);
 }
 
-void * th_envoi(void * args){
-    while(1){
+void * void_envoi(void * args){
 // --------------- Thread envoi ----------------
-        char quit[40] = "/q";
-        if(strcmp(msg,quit) == 0){
-            printf("\nfin de la reception.\n");
-
-    //close(socket_descriptor);
-            printf("connexion avec le serveur fermee, fin du programme.\n");
-            exit(0);        
-        }
-        printf("envoi d'un message au serveur. \n");
+    char quit[40] = "/q";
+    //printf("envoi d'un message au serveur. \n");
 
     /* envoi du message vers le serveur */
-        if ((write(socket_descriptor, msg, strlen(msg))) < 0) {
-            perror("erreur : impossible d'ecrire le message destine au serveur.");
-            exit(1);
-        }
-    /* mise en attente du prgramme pour simuler un delai de transmission */
-        sleep(3);
-        printf("message envoye au serveur. \n");
+    if ((write(socket_descriptor, msg, strlen(msg))) < 0) {
+        perror("erreur : impossible d'ecrire le message destine au serveur.");
+        exit(1);
     }
+
+    if(strcmp(msg,quit) == 0){
+        printf("connexion avec le serveur fermee, fin du programme.\n");
+        close(socket_descriptor);
+        exit(0);        
+    }
+
+    /* mise en attente du prgramme pour simuler un delai de transmission */
+    //sleep(3);
+    //printf("message envoye au serveur. \n");
+    // ------------------------------
+    pthread_exit(NULL);
 }
 
 int main(int argc, char **argv) {
@@ -138,15 +139,21 @@ exit(1);
     // TODO :  init thread
 
     pthread_t th_reception;
-    printf("init thread \n");
+    pthread_t th_envoi;
+    //printf("init thread \n");
 
 
     pthread_create(&th_reception, NULL, void_reception, NULL);
-    
-    printf("scanf \n");
     while(1){
-        printf("Message : ");
+        //printf("\nMessage : \n");
         scanf("%s",msg);
+        printf("\n");
+        pthread_create(&th_envoi, NULL, void_envoi, NULL);
+
+        if(pthread_join(th_envoi, NULL)){
+            perror("join");
+            return EXIT_FAILURE;
+        }
     }
 
     if(pthread_join(th_reception, NULL)){
