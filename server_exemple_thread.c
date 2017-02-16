@@ -19,6 +19,8 @@ typedef struct sockaddr_in sockaddr_in;
 typedef struct hostent hostent;
 typedef struct servent servent;
 
+typedef enum{false , true} bool;
+
 //-------Var Globales
 
 int compteurTab = 1;
@@ -27,17 +29,31 @@ int position=0;
 
 //--------------
 
-
+/*
 struct varRenvoi{
     void * soc;
     void * compteurTab;
     void * position;
 };
-
+*/
 /*------------------------------------------------------*/
+
+bool checkClient(int client){
+
+    int i;
+    for ( i = 0 ; i < compteurTab ; i++ )
+    {
+        if(tabentier[i] == client){
+            return true;
+        }
+    }
+
+    return false;
+}
+
 void * renvoi (void * varV) {
 
-    struct varRenvoi *var = (struct varRenvoi*)varV;
+//    struct varRenvoi *var = (struct varRenvoi*)varV;
 
     char buffer[256];
 
@@ -55,49 +71,99 @@ void * renvoi (void * varV) {
     int * tmp = (int *)varV;
     int client = tmp;
 
+    printf("client : %d \n",client);
+
     if ((longueur = read(client, buffer, sizeof(buffer))) <= 0) 
         return;
     printf("message lu : %s \n", buffer);
 
+    buffer[longueur] ='\0';
+
+    char quit[] = "/q";
+    if(strcmp(buffer,quit) == 0){
+        printf("quit \n");
+        close(client);
+
+        // ---------------------------------- Enleve client dans tab
+
+        /*
+        temp = realloc (tabentier, compteurTab-1 * sizeof(int ) );
+        compteurTab --;
+
+        if ( temp == NULL )
+        {
+            fprintf(stderr,"Reallocation impossible");
+            free(tabentier);
+            exit(EXIT_FAILURE);
+        }
+        else
+        {
+            int i;
+            int j = 0;
+            for(i = 0; i < compteurTab; ++i){
+                if(tabentier[i] == client){
+                    j++;
+                }
+                else{
+                    temp[i] = tabentier[j];
+                }
+                ++j;
+            }
+            tabentier = temp;
+        }
+        */
+        // ----------------------------------
+
+        return;
+    }
+
 //---------------------------------------------------------------------------------------------------
 
 /* Redimensionnement*/
-
-    temp = realloc (tabentier, compteurTab+1 * sizeof(int ) );
-    compteurTab ++;
-
-    if ( temp == NULL )
-    {
-        fprintf(stderr,"Reallocation impossible");
-        free(tabentier);
-        exit(EXIT_FAILURE);
+    if(checkClient(client) == true){
+        // di nothing
     }
-    else
-    {
-     tabentier = temp;
- }
+    else{
+        temp = realloc (tabentier, compteurTab+1 * sizeof(int ) );
+        compteurTab ++;
 
+        if ( temp == NULL )
+        {
+            fprintf(stderr,"Reallocation impossible");
+            free(tabentier);
+            exit(EXIT_FAILURE);
+        }
+        else
+        {
+            tabentier = temp;
+        }
+
+        tabentier[compteurTab -1 ] = client;
+    }
 
 //    buffer[0] = 'R';
 //    buffer[1] = 'E';
- buffer[longueur] = '#';
- buffer[longueur+1] ='\0';
- printf("message apres traitement : %s \n", buffer);  
- printf("renvoi du message traite.\n");
+    buffer[longueur] ='\0';
+    printf("message apres traitement : %s \n", buffer);  
+    printf("renvoi du message traite.\n");
     /* mise en attente du programme pour simuler un delai de transmission */
- sleep(3);
+    sleep(3);
 
 
 
 /* Ajout d'un élement */
 
- tabentier[compteurTab -1 ] = client;
-
- for ( int i = 0 ; i < compteurTab ; i++ )
- {
-     write(client,buffer,strlen(buffer)+1);    
+    int i;
+    for ( i = 0 ; i < compteurTab ; i++ )
+    {
+     write(tabentier[i],buffer,strlen(buffer)+1);    
      printf("message envoye. \n");  
  }
+
+/* Suppression d'un element */
+
+
+
 
  return;
 }
@@ -207,17 +273,20 @@ printf("numero de port pour la connexion au serveur : %d \n",
 /* traitement du message */
 
 //--------------
+    /*
     struct varRenvoi *var;
 
     var = malloc(sizeof(struct varRenvoi));
     (*var).soc = (int**) &tabentier;
     (*var).compteurTab = (int *)&compteurTab;
     (*var).position = (int *)position;
-
-
+*/
+    printf("nouveauClient : %d \n",nouv_socket_descriptor);
+    char welcome[] = "Coucou";
+    write(nouv_socket_descriptor,welcome,strlen(welcome)+1);
+      
     pthread_create (&thread1, NULL, renvoi, (void*)nouv_socket_descriptor);
 
     pthread_join(thread1, NULL);
-    close(nouv_socket_descriptor);
 }    
 }

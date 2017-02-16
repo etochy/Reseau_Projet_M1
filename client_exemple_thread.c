@@ -8,6 +8,8 @@ client <adresse-serveur> <message-a-transmettre>
 #include <sys/socket.h>
 #include <netdb.h>
 #include <string.h>
+#include <pthread.h>
+
 typedef struct sockaddr 
 sockaddr;
 typedef struct sockaddr_in 
@@ -16,41 +18,89 @@ typedef struct hostent
 hostent;
 typedef struct servent 
 servent;
-int main(int argc, char **argv) {
-    int 
-    socket_descriptor, 
+
+typedef enum{false , true} bool;
+
+// ---------- var global --------------
+
+int 
+socket_descriptor, 
 /* descripteur de socket */
-    longueur; 
+longueur; 
 /* longueur d'un buffer utilisé */
-    sockaddr_in adresse_locale; 
+sockaddr_in adresse_locale; 
 /* adresse de socket local */
-    hostent *
-    ptr_host; 
+hostent * ptr_host; 
 /* info sur une machine hote */
-    servent *
-    ptr_service; 
+servent * ptr_service; 
 /* info sur service */
-    char 
-    buffer[256];
-    char *
-    prog; 
+char buffer[256];
+char * prog; 
 /* nom du programme */
-    char *
-    host; 
+char * host; 
 /* nom de la machine distante */
-    char *
-    mesg; 
+char * mesg; 
+char msg[40] = {0};
+
+// ------------------------------------
+
+void * void_reception(void * arg){
+// --------------- Thread reception ----------------
+    printf("th_reception \n");
+
+    sleep(3);
+
+    /* lecture de la reponse en provenance du serveur */
+    
+    while((longueur = read(socket_descriptor, buffer, sizeof(buffer))) > 0) {
+        printf("serveur : \n");
+        write(1,buffer,longueur);
+        printf("\n");
+    }
+    
+// ------------------------------
+    pthread_exit(NULL);
+}
+
+void * th_envoi(void * args){
+    while(1){
+// --------------- Thread envoi ----------------
+        char quit[40] = "/q";
+        if(strcmp(msg,quit) == 0){
+            printf("\nfin de la reception.\n");
+
+    //close(socket_descriptor);
+            printf("connexion avec le serveur fermee, fin du programme.\n");
+            exit(0);        
+        }
+        printf("envoi d'un message au serveur. \n");
+
+    /* envoi du message vers le serveur */
+        if ((write(socket_descriptor, msg, strlen(msg))) < 0) {
+            perror("erreur : impossible d'ecrire le message destine au serveur.");
+            exit(1);
+        }
+    /* mise en attente du prgramme pour simuler un delai de transmission */
+        sleep(3);
+        printf("message envoye au serveur. \n");
+    }
+}
+
+int main(int argc, char **argv) {
 /* message envoyé */
-    if (argc != 3) {
-        perror("usage : client <adresse-serveur> <message-a-transmettre>");
+    if (argc != 2) {
+        perror("usage : client <adresse-serveur>");
         exit(1);
     }
     prog = argv[0];
     host = argv[1];
-    mesg = argv[2];
+    //mesg = argv[2];
+
     printf("nom de l'executable : %s \n", prog);
     printf("adresse du serveur  : %s \n", host);
-    printf("message envoye      : %s \n", mesg);
+
+ //   printf("message envoye      : %s \n", mesg);
+
     if ((ptr_host = gethostbyname(host)) == NULL) {
         perror("erreur : impossible de trouver le serveur a partir de son adresse.");
         exit(1);
@@ -84,25 +134,24 @@ exit(1);
         exit(1);
     }
     printf("connexion etablie avec le serveur. \n");
-    printf("envoi d'un message au serveur. \n");
-    /* envoi du message vers le serveur */
-    if ((write(socket_descriptor, mesg, strlen(mesg))) < 0) {
-        perror("erreur : impossible d'ecrire le message destine au serveur.");
-        exit(1);
-    }
-    /* mise en attente du prgramme pour simuler un delai de transmission */
-    sleep(3);
-    printf("message envoye au serveur. \n");
-    /* lecture de la reponse en provenance du serveur */
-    while((longueur = read(socket_descriptor, buffer, sizeof(buffer))) > 0) {
-        printf("reponse du serveur : \n");
-        write(1,buffer,longueur);
-    }
-    printf("\nfin de la reception.\n");
 
+    // TODO :  init thread
+
+    pthread_t th_reception;
+    printf("init thread \n");
+
+
+    pthread_create(&th_reception, NULL, void_reception, NULL);
     
+    printf("scanf \n");
+    while(1){
+        printf("Message : ");
+        scanf("%s",msg);
+    }
 
-    close(socket_descriptor);
-    printf("connexion avec le serveur fermee, fin du programme.\n");
-    exit(0);  
+    if(pthread_join(th_reception, NULL)){
+        perror("join");
+        return EXIT_FAILURE;
+    }
+
 }
