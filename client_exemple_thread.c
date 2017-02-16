@@ -99,6 +99,9 @@ exit(1);
         write(1,buffer,longueur);
     }
     printf("\nfin de la reception.\n");
+
+    
+
     close(socket_descriptor);
     printf("connexion avec le serveur fermee, fin du programme.\n");
     exit(0);  
