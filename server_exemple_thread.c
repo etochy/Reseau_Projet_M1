@@ -60,46 +60,64 @@ void * ecoute (void * arg){
     int client = tmp;
 
     while(1){
-        printf("ecoute\n");
        // int i = 0;
         //if(compteurTab != 0){
             //for(i = 0; i < compteurTab; ++i){
-                printf("client : %d \n",client);
-            if ((longueur = read(client, buffer, sizeof(buffer))) < 0) {return;}
-                else{
-                    printf("message lu : %s \n", buffer);
+        if ((longueur = read(client, buffer, sizeof(buffer))) < 0) {return;}
+        else{
+            printf("message lu : %s \n", buffer);
 
-                    buffer[longueur] ='\0';
+            buffer[longueur] ='\0';
 
-                    char quit[] = "/q";
-                    if(strcmp(buffer,quit) == 0){
-                        printf("quit \n");
-                        close(client);
-                        return;
-                    }
-                    buffer[longueur] ='\0';
-                    printf("message apres traitement : %s \n", buffer);  
-                    printf("renvoi du message traite.\n");
+            char quit[] = "/q";
+            char list[] = "/l";
+            if(strcmp(buffer,quit) == 0){
+                printf("quit \n");
+                close(client);
+                return;
+            }
+            else if(strcmp(buffer,list) == 0){
+                printf("list \n");
+                buffer[longueur] ='\0';
 /* mise en attente du programme pour simuler un delai de transmission */
-                    sleep(3);
+                //sleep(1);
+                int j;
+                for ( j = 0 ; j < compteurTab ; j++ ){
 
-                    int j;
-                    for ( j = 0 ; j < compteurTab ; j++ ){
-                        write(tabentier[j],buffer,strlen(buffer)+1);    
-                        printf("message envoye. \n");  
-                    }
-                }
+                    printf("avant");
+                    char str[40];
+                    sprintf(str, "%d", tabentier[j]);
+                    printf("string : %s", str);
 
-            //}
-        //}
-        
-        printf("ta mere\n");
+                    write(client,str,strlen(str)+1);    
+                    printf("message envoye. \n");  
+                }    
+            }
+            else{
+                buffer[longueur] ='\0';
+                printf("message apres traitement : %s \n", buffer);  
+                printf("renvoi du message traite.\n");
+/* mise en attente du programme pour simuler un delai de transmission */
+               // sleep(1);
+
+                int j;
+                for ( j = 0 ; j < compteurTab ; j++ ){
+                    write(tabentier[j],buffer,strlen(buffer)+1);    
+                    printf("message envoye. \n");  
+                }    
+            }
+
+        }
+
     }
+        //}
+    //}
+    close(client);
     (void) arg;
+    pthread_exit(NULL);
 }
 
 void * renvoi (void * varV) {
-    printf("ta mere2\n");
 //    struct varRenvoi *var = (struct varRenvoi*)varV;
 
     char buffer[256];
@@ -199,7 +217,7 @@ tabentier = temp;
         write(tabentier[i],buffer,strlen(buffer)+1);    
         printf("message envoye. \n");  
     }*/
-    printf("ta mere3\n");
+    pthread_exit(NULL);
 }
 /*------------------------------------------------------*/
 
@@ -315,8 +333,8 @@ var = malloc(sizeof(struct varRenvoi));
 (*var).position = (int *)position;
 */
         printf("nouveauClient : %d \n",nouv_socket_descriptor);
-        char welcome[] = "Coucou";
-        //write(nouv_socket_descriptor,welcome,strlen(welcome)+1);
+        char welcome[] = "Bienvenue sur le chan";
+        write(nouv_socket_descriptor,welcome,strlen(welcome)+1);
 
         pthread_create (&threadSock, NULL, renvoi, (void*)nouv_socket_descriptor);
         pthread_t threadEcoute;

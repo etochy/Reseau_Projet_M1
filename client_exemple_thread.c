@@ -47,15 +47,11 @@ char msg[40] = {0};
 void * void_reception(void * arg){
 // --------------- Thread reception ----------------
    // printf("th_reception \n");
-
-    sleep(3);
-
     /* lecture de la reponse en provenance du serveur */
-    
+
     while((longueur = read(socket_descriptor, buffer, sizeof(buffer))) > 0) {
         printf("\nserveur : \n");
         write(1,buffer,longueur);
-        printf("\n");
         printf("\nMessage : \n");
     }
     
@@ -88,6 +84,7 @@ void * void_envoi(void * args){
 }
 
 int main(int argc, char **argv) {
+
 /* message envoyé */
     if (argc != 2) {
         perror("usage : client <adresse-serveur>");
@@ -161,4 +158,5 @@ exit(1);
         return EXIT_FAILURE;
     }
 
+    return EXIT_SUCCESS;
 }
