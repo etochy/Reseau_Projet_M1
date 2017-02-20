@@ -3,13 +3,13 @@ Serveur à lancer avant le client
 ------------------------------------------------*/
 #include <stdlib.h>
 #include <stdio.h>
-#include <linux/types.h> 
+#include <linux/types.h>
 /* pour les sockets */
 #include <sys/socket.h>
-#include <netdb.h> 
+#include <netdb.h>
 /* pour hostent, servent */
-#include <string.h> 
-/* pour bcopy, ... */  
+#include <string.h>
+/* pour bcopy, ... */
 #include <pthread.h>
 /**/
 
@@ -26,6 +26,14 @@ typedef enum{false , true} bool;
 int compteurTab = 0;
 int * tabentier = {0} ,*temp;
 int position=0;
+/* --- TODO---
+* Implementer une structure de données style vector pour le stockage des sockets clients
+* Affecter un pseudo au clients
+* Permettre l'envoi de phrase et non plus de mots
+* Envoi de messages privés
+*
+*
+*/
 
 //--------------
 
@@ -69,8 +77,9 @@ void * ecoute (void * arg){
 
             buffer[longueur] ='\0';
 
-            char quit[] = "/q";
-            char list[] = "/l";
+            char quit[] = "/q"; // permet au client de quitter
+            char list[] = "/l"; // liste les clients connectés
+            char priv[] = "/p"; // envoi d'un msg privé a un au client
             if(strcmp(buffer,quit) == 0){
                 printf("quit \n");
                 close(client);
@@ -89,22 +98,50 @@ void * ecoute (void * arg){
                     sprintf(str, "%d", tabentier[j]);
                     printf("string : %s", str);
 
-                    write(client,str,strlen(str)+1);    
-                    printf("message envoye. \n");  
-                }    
+                    write(client,str,strlen(str)+1);
+                    printf("message envoye. \n");
+                }
             }
+            
+            /* --- MSG PRIVE ---
+            else if(strcmp(buffer,priv) == 0){
+              printf("msg prive \n");
+              
+              //diviser le buffer en 3 parties
+              // ------
+              buffer[longueur] ='\0';
+              
+              // 1ere partie : /p
+              
+              // 2eme partie : socket ou pseudo (a voir)
+              int j; //valeur du socket
+              
+              // 3eme partie : msg
+              
+              //------
+              
+              printf("message apres traitement : %s \n", buffer);
+              printf("renvoi du message traite.\n");
+             // sleep(1);
+             
+              write(j,buffer,strlen(buffer)+1);
+              
+              printf("message envoye. \n");
+            }
+            */
+            
             else{
                 buffer[longueur] ='\0';
-                printf("message apres traitement : %s \n", buffer);  
+                printf("message apres traitement : %s \n", buffer);
                 printf("renvoi du message traite.\n");
 /* mise en attente du programme pour simuler un delai de transmission */
                // sleep(1);
 
                 int j;
                 for ( j = 0 ; j < compteurTab ; j++ ){
-                    write(tabentier[j],buffer,strlen(buffer)+1);    
-                    printf("message envoye. \n");  
-                }    
+                    write(tabentier[j],buffer,strlen(buffer)+1);
+                    printf("message envoye. \n");
+                }
             }
 
         }
@@ -161,7 +198,7 @@ int client = tmp[pos];
 
 /*
     printf("client : %d \n",client);
-    if ((longueur = read(client, buffer, sizeof(buffer))) <= 0) 
+    if ((longueur = read(client, buffer, sizeof(buffer))) <= 0)
         return;
     printf("message lu : %s \n", buffer);
 
@@ -207,15 +244,15 @@ tabentier = temp;
 //    buffer[1] = 'E';
     /*
     buffer[longueur] ='\0';
-    printf("message apres traitement : %s \n", buffer);  
+    printf("message apres traitement : %s \n", buffer);
     printf("renvoi du message traite.\n");*/
 /* mise en attente du programme pour simuler un delai de transmission */
    /* sleep(3);
 
     int i;
     for ( i = 0 ; i < compteurTab ; i++ ){
-        write(tabentier[i],buffer,strlen(buffer)+1);    
-        printf("message envoye. \n");  
+        write(tabentier[i],buffer,strlen(buffer)+1);
+        printf("message envoye. \n");
     }*/
     pthread_exit(NULL);
 }
@@ -223,23 +260,23 @@ tabentier = temp;
 
 /*------------------------------------------------------*/
 main(int argc, char **argv) {
-    int 
-    socket_descriptor, 
+    int
+    socket_descriptor,
 /* descripteur de socket */
-    nouv_socket_descriptor, 
+    nouv_socket_descriptor,
 /* [nouveau] descripteur de socket */
-    longueur_adresse_courante; 
+    longueur_adresse_courante;
 /* longueur d'adresse courante d'un client */
-    sockaddr_in 
-    adresse_locale, 
+    sockaddr_in
+    adresse_locale,
 /* structure d'adresse locale*/
-    adresse_client_courant; 
+    adresse_client_courant;
 /* adresse client courant */
     hostent*
-    ptr_hote; 
+    ptr_hote;
 /* les infos recuperees sur la machine hote */
     servent*
-    ptr_service; 
+    ptr_service;
 
 // ------------------------------------------- TAB
 
@@ -258,8 +295,8 @@ main(int argc, char **argv) {
 
 //  int* psocket_descriptor = &socket_descriptor;
 /* les infos recuperees sur le service de la machine */
-    char 
-    machine[TAILLE_MAX_NOM+1]; 
+    char
+    machine[TAILLE_MAX_NOM+1];
 /* nom de la machine locale */
     gethostname(machine,TAILLE_MAX_NOM);
 /* recuperation du nom de la machine */
@@ -270,15 +307,15 @@ main(int argc, char **argv) {
     if ((ptr_hote = gethostbyname(machine)) == NULL) {
         perror("erreur : impossible de trouver le serveur a partir de son nom.");
         exit(1);
-    }    
+    }
 /* initialisation de la structure adresse_locale avec les infos recuperees */
 /* copie de ptr_hote vers adresse_locale */
     bcopy((char*)ptr_hote->h_addr, (char*)&adresse_locale.sin_addr, ptr_hote->h_length);
     adresse_locale.sin_family
-    = ptr_hote->h_addrtype; 
+    = ptr_hote->h_addrtype;
 /* ou AF_INET */
     adresse_locale.sin_addr.s_addr
-    = INADDR_ANY; 
+    = INADDR_ANY;
 /* ou AF_INET */
 /* 2 facons de definir le service que l'on va utiliser a distance */
 /* (commenter l'une ou l'autre des solutions) */
@@ -294,7 +331,7 @@ adresse_locale.sin_port = htons(ptr_service->s_port);
 /* SOLUTION 2 : utiliser un nouveau numero de port */
     adresse_locale.sin_port = htons(5000);
 /*-----------------------------------------------------------*/
-    printf("numero de port pour la connexion au serveur : %d \n", 
+    printf("numero de port pour la connexion au serveur : %d \n",
 ntohs(adresse_locale.sin_port) /*ntohs(ptr_service->s_port)*/);
 /* creation de la socket */
         if ((socket_descriptor = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
@@ -313,8 +350,8 @@ ntohs(adresse_locale.sin_port) /*ntohs(ptr_service->s_port)*/);
 
             longueur_adresse_courante = sizeof(adresse_client_courant);
 /* adresse_client_courant sera renseignée par accept via les infos du connect */
-            if ((nouv_socket_descriptor = 
-                accept(socket_descriptor, 
+            if ((nouv_socket_descriptor =
+                accept(socket_descriptor,
                     (sockaddr*)(&adresse_client_courant),
                     &longueur_adresse_courante))
                 < 0) {
@@ -341,5 +378,5 @@ var = malloc(sizeof(struct varRenvoi));
         pthread_create (&threadEcoute, NULL, ecoute, (void*)nouv_socket_descriptor);
         pthread_join(threadSock, NULL);
        // pthread_join(threadEcoute, NULL);
-    }   
+    }
 }
