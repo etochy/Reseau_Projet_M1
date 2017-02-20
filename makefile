@@ -1,4 +1,4 @@
-all : client server client_fork client_thread server_fork server_thread
+all : client server client_fork client_thread server_fork server_thread vector
 
 client : client_exemple.c
 	gcc -o clientApp client_exemple.c
@@ -17,6 +17,9 @@ server_fork : server_exemple_fork.c
 
 server_thread : server_exemple_thread.c
 	gcc -o serverApp_thread server_exemple_thread.c -lpthread
+
+vector : vector.h vector.c
+	gcc -std=c99 -o testV vector.c
 
 clean:
 	rm -rf *.o
