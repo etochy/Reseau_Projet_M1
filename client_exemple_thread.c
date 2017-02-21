@@ -43,6 +43,30 @@ char * mesg;
 char msg[40] = {0};
 
 // ------------------------------------
+// ------ fgets : ------------
+
+void purger(void)
+{
+    int c;
+    while ((c = getchar()) != '\n' && c != EOF)
+    {}
+}
+
+void clean (char *chaine)
+{
+    char *p = strchr(chaine, '\n');
+    if (p)
+    {
+        *p = 0;
+    }
+    else
+    {
+        purger();
+    }
+}
+
+//----------------------------
+
 
 void * void_reception(void * arg){
 // --------------- Thread reception ----------------
@@ -62,7 +86,6 @@ void * void_reception(void * arg){
 void * void_envoi(void * args){
 // --------------- Thread envoi ----------------
     char quit[40] = "/q";
-    //printf("envoi d'un message au serveur. \n");
 
     /* envoi du message vers le serveur */
     if ((write(socket_descriptor, msg, strlen(msg))) < 0) {
@@ -143,7 +166,9 @@ exit(1);
     pthread_create(&th_reception, NULL, void_reception, NULL);
     while(1){
         //printf("\nMessage : \n");
-        scanf("%s",msg);
+        fgets(msg, sizeof msg, stdin);
+        clean(msg);
+      //  scanf("%s",msg);
         printf("\n");
         pthread_create(&th_envoi, NULL, void_envoi, NULL);
 

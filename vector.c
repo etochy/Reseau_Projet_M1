@@ -10,13 +10,20 @@ void vector_init(vector *v)
     v->size = 0;
     v->count = 0;
 }
-
+void vector_init_ps(vector *v)
+{
+    v->count = 0;
+    v->size = 10;
+    v->data = malloc(sizeof(void*) * v->size);
+    memset(v->data, '\0', sizeof(void*) * v->size);
+    v->count = v->size;
+}
 int vector_count(vector *v)
 {
     return v->count;
 }
 
-void vector_add(vector *v, void *e)
+void vector_add_st(vector *v, void *e)
 {
     if (v->size == 0) {
         v->size = 10;
@@ -33,10 +40,28 @@ void vector_add(vector *v, void *e)
     v->count++;
 }
 
+void vector_add_int(vector *v, int e)
+{
+    if (v->size == 0) {
+        v->size = 10;
+        v->data = malloc(sizeof(int) * v->size);
+        memset(v->data, '\0', sizeof(int) * v->size);
+    }
+
+    if (v->size == v->count) {
+        v->size *= 2;
+        v->data = realloc(v->data, sizeof(int) * v->size);
+    }
+
+    v->data[v->count] = e;
+    v->count++;
+}
+
 void vector_set(vector *v, int index, void *e)
 {
     if (index >= v->count) {
-        return;
+        v->size *= 2;
+        v->data = realloc(v->data, sizeof(int) * v->size);
     }
 
     v->data[index] = e;
@@ -51,13 +76,22 @@ void *vector_get(vector *v, int index)
     return v->data[index];
 }
 
+void* vector_get_int(vector *v, int index)
+{
+    if (index >= v->count) {
+        return NULL;
+    }
+
+    return v->data[index];
+}
+
 void vector_delete(vector *v, int index)
 {
     if (index >= v->count) {
         return;
     }
-
-    for (int i = index +1, j = index; i < v->count; ++i) {
+    int i, j;
+    for (i = index +1, j = index; i < v->count; ++i) {
         printf("i : %d , j : %d\n",i,j );
         v->data[j] = v->data[i];
         ++j;
@@ -70,7 +104,7 @@ void vector_free(vector *v)
 {
     free(v->data);
 }
-
+/*
 int main(void)
 {
     vector v;
@@ -100,3 +134,4 @@ int main(void)
 
     return 0;
 }
+*/

@@ -13,6 +13,8 @@ Serveur à lancer avant le client
 #include <pthread.h>
 /**/
 
+#include "vector.h"
+
 #define TAILLE_MAX_NOM 256
 typedef struct sockaddr sockaddr;
 typedef struct sockaddr_in sockaddr_in;
@@ -24,12 +26,14 @@ typedef enum{false , true} bool;
 //-------Var Globales
 
 int compteurTab = 0;
-int * tabentier = {0} ,*temp;
+int * tabentier = {0};
 int position=0;
+
+vector v;
+vector pseudo;
+
 /* --- TODO---
-* Implementer une structure de données style vector pour le stockage des sockets clients
 * Affecter un pseudo au clients
-* Permettre l'envoi de phrase et non plus de mots
 * Envoi de messages privés
 *
 *
@@ -37,26 +41,28 @@ int position=0;
 
 //--------------
 
-/*
-struct varRenvoi{
-void * soc;
-void * compteurTab;
-void * position;
-};
-*/
 /*------------------------------------------------------*/
 
 bool checkClient(int client){
-
     int i;
-    for ( i = 0 ; i < compteurTab ; i++ )
-    {
-        if(tabentier[i] == client){
+    for (i= 0; i < vector_count(&v); i++) {
+        int x = (int)vector_get(&v, i);
+        if(x == client){
             return true;
         }
     }
-
     return false;
+}
+
+void suppr(int c){
+    int i;
+    for (i = 0; i < vector_count(&v); i++) {
+        int x = (int)vector_get_int(&v, i);
+        if(x == c){
+            vector_delete(&v, i);
+            return;
+        }
+    }
 }
 
 void * ecoute (void * arg){
@@ -66,90 +72,125 @@ void * ecoute (void * arg){
 
     int * tmp = (int *)arg;
     int client = tmp;
-
-    while(1){
-       // int i = 0;
-        //if(compteurTab != 0){
-            //for(i = 0; i < compteurTab; ++i){
+    bool t = true;
+    while(t == true){
+// int i = 0;
+//if(compteurTab != 0){
+//for(i = 0; i < compteurTab; ++i){
         if ((longueur = read(client, buffer, sizeof(buffer))) < 0) {return;}
         else{
             printf("message lu : %s \n", buffer);
 
             buffer[longueur] ='\0';
 
+            char p1[50];
+            char p2[50];
+            char p3[50] = "";
+            int compteur = 0;
+            char * pch;
+            printf ("Splitting string \"%s\" into tokens:\n",buffer);
+            pch = strtok (buffer," ");
+
+            while (pch != NULL)
+            {
+                printf ("%s\n",pch);
+                if(compteur == 0){
+                    strcpy(p1, pch);
+                    ++compteur;
+                }
+                else if(compteur == 1){
+                    strcpy(p2, pch);
+                    ++compteur;
+                }
+                else{
+                    strcat(p3, pch);
+                    strcat(p3, " ");
+                    ++compteur;
+                }
+                pch = strtok (NULL, " ");
+            }
+            printf("p1 : %s\n", p1);
+            printf("p2 : %s\n", p2);
+            printf("p3 : %s\n", p3  );
+
             char quit[] = "/q"; // permet au client de quitter
             char list[] = "/l"; // liste les clients connectés
             char priv[] = "/p"; // envoi d'un msg privé a un au client
+            char pseu[] = "/n"; // changement de pseudo
             if(strcmp(buffer,quit) == 0){
                 printf("quit \n");
+                suppr(client);
+                vector_set(&pseudo, client, "");
                 close(client);
-                return;
+                t = false;
             }
             else if(strcmp(buffer,list) == 0){
                 printf("list \n");
                 buffer[longueur] ='\0';
-/* mise en attente du programme pour simuler un delai de transmission */
-                //sleep(1);
-                int j;
-                for ( j = 0 ; j < compteurTab ; j++ ){
-
-                    printf("avant");
-                    char str[40];
-                    sprintf(str, "%d", tabentier[j]);
-                    printf("string : %s", str);
-
+            /* mise en attente du programme pour simuler un delai de transmission */
+            //sleep(1);
+                int i;
+                for (i = 0; i < vector_count(&v); i++) {
+                    char str[50];
+                    sprintf(str, "%d", (int)vector_get_int(&v, i));
                     write(client,str,strlen(str)+1);
-                    printf("message envoye. \n");
                 }
             }
-            
-            /* --- MSG PRIVE ---
-            else if(strcmp(buffer,priv) == 0){
-              printf("msg prive \n");
-              
-              //diviser le buffer en 3 parties
-              // ------
-              buffer[longueur] ='\0';
-              
-              // 1ere partie : /p
-              
-              // 2eme partie : socket ou pseudo (a voir)
-              int j; //valeur du socket
-              
-              // 3eme partie : msg
-              
-              //------
-              
-              printf("message apres traitement : %s \n", buffer);
-              printf("renvoi du message traite.\n");
-             // sleep(1);
-             
-              write(j,buffer,strlen(buffer)+1);
-              
-              printf("message envoye. \n");
+            else if(strcmp(p1,pseu) == 0){
+                printf(" ------ pseudo ------  \n");
+                vector_set(&pseudo, client, p2);
+                int i;
+                for (i = 0; i < vector_count(&pseudo); i++) {
+                    char str[50];
+                    printf("test : %s ", (char*)vector_get(&v, i));
+                }
             }
-            */
-            
+
+/* --- MSG PRIVE ---
+else if(strcmp(buffer,priv) == 0){
+printf("msg prive \n");
+
+//diviser le buffer en 3 parties
+// ------
+buffer[longueur] ='\0';
+
+// 1ere partie : /p
+
+// 2eme partie : socket ou pseudo (a voir)
+int j; //valeur du socket
+
+// 3eme partie : msg
+
+//------
+
+printf("message apres traitement : %s \n", buffer);
+printf("renvoi du message traite.\n");
+// sleep(1);
+
+write(j,buffer,strlen(buffer)+1);
+
+printf("message envoye. \n");
+}
+*/
+
             else{
                 buffer[longueur] ='\0';
                 printf("message apres traitement : %s \n", buffer);
                 printf("renvoi du message traite.\n");
 /* mise en attente du programme pour simuler un delai de transmission */
-               // sleep(1);
-
-                int j;
-                for ( j = 0 ; j < compteurTab ; j++ ){
-                    write(tabentier[j],buffer,strlen(buffer)+1);
-                    printf("message envoye. \n");
+// sleep(1);
+                int i;
+                for (i = 0; i < vector_count(&v); i++) {
+                    write((int)vector_get_int(&v, i),buffer,strlen(buffer)+1);
                 }
             }
 
         }
 
     }
-        //}
-    //}
-    close(client);
+//}
+//}
+//close(client);
     (void) arg;
     pthread_exit(NULL);
 }
@@ -160,100 +201,20 @@ void * renvoi (void * varV) {
     char buffer[256];
     int longueur;
 
-
-/*
-int **tmp = (int **)(*var).soc;
-int * tmp2 = (int *)(*var).compteurTab;
-int compteur = tmp2;
-tmp2 = (int *)(*var).position;
-int pos = tmp2;
-int client = tmp[pos];
-*/
     int * tmp = (int *)varV;
     int client = tmp;
 
-//---------------------------------------------------------------------------------------------------
-
-/* Redimensionnement*/
-/*   if(checkClient(client) == true){
-// di nothing
+    printf("client : %d\n", client);
+    if(checkClient(client) == false){
+        vector_add_int(&v, client);
     }
-    else{*/
-    temp = realloc (tabentier, compteurTab+1 * sizeof(int ) );
-    compteurTab ++;
-
-    if ( temp == NULL )
-    {
-        fprintf(stderr,"Reallocation impossible");
-        free(tabentier);
-        exit(EXIT_FAILURE);
-    }
-    else
-    {
-        tabentier = temp;
-    }
-
-    tabentier[compteurTab -1 ] = client;
-    //}
-
-/*
-    printf("client : %d \n",client);
-    if ((longueur = read(client, buffer, sizeof(buffer))) <= 0)
-        return;
-    printf("message lu : %s \n", buffer);
-
-    buffer[longueur] ='\0';
-
-    char quit[] = "/q";
-    if(strcmp(buffer,quit) == 0){
-        printf("quit \n");
-        close(client);
-        return;
-// ---------------------------------- Enleve client dans tab
-
-/*
-temp = realloc (tabentier, compteurTab-1 * sizeof(int ) );
-compteurTab --;
-
-if ( temp == NULL )
-{
-fprintf(stderr,"Reallocation impossible");
-free(tabentier);
-exit(EXIT_FAILURE);
-}
-else
-{
-int i;
-int j = 0;
-for(i = 0; i < compteurTab; ++i){
-if(tabentier[i] == client){
-j++;
-}
-else{
-temp[i] = tabentier[j];
-}
-++j;
-}
-tabentier = temp;
-}
-*/
-// ----------------------------------
-    //}
-
-//    buffer[0] = 'R';
-//    buffer[1] = 'E';
-    /*
-    buffer[longueur] ='\0';
-    printf("message apres traitement : %s \n", buffer);
-    printf("renvoi du message traite.\n");*/
-/* mise en attente du programme pour simuler un delai de transmission */
-   /* sleep(3);
 
     int i;
-    for ( i = 0 ; i < compteurTab ; i++ ){
-        write(tabentier[i],buffer,strlen(buffer)+1);
-        printf("message envoye. \n");
-    }*/
+    printf("first round:\n");
+    for (i = 0; i < vector_count(&v); i++) {
+        printf("client : %d -> %d\n", i, (int)vector_get_int(&v, i));
+    }
+
     pthread_exit(NULL);
 }
 /*------------------------------------------------------*/
@@ -278,19 +239,27 @@ main(int argc, char **argv) {
     servent*
     ptr_service;
 
-// ------------------------------------------- TAB
+// --- vector ---
 
-/* Création d'un tableau de 1 entiers */
+    vector_init(&v);
+    vector_init_ps(&pseudo);
+    /*
+    int m;
+    for(m=0;m<10;++m){
+        char str[10];
+        char num[6];
 
-    tabentier = realloc ( tabentier , 1 * sizeof(int) );
-
-    if ( tabentier == NULL ){
-        fprintf(stderr,"Allocation impossible");
-        exit(EXIT_FAILURE);
+        strcpy(str,  "anonimous ");
+        sprintf(num, "%d", m);
+        strcat(str, num);
+        strcpy(pseudo[m], str);
     }
-
-    tabentier[0] = 0;
-
+    */
+/*
+for(m=0;m<10;++m){
+printf("pseudo : %d = %s\n",m,pseudo[m] );
+}
+*/
 // -------------------------------------------
 
 //  int* psocket_descriptor = &socket_descriptor;
@@ -332,8 +301,9 @@ adresse_locale.sin_port = htons(ptr_service->s_port);
     adresse_locale.sin_port = htons(5000);
 /*-----------------------------------------------------------*/
     printf("numero de port pour la connexion au serveur : %d \n",
-ntohs(adresse_locale.sin_port) /*ntohs(ptr_service->s_port)*/);
+    ntohs(adresse_locale.sin_port) /*ntohs(ptr_service->s_port)*/);
 /* creation de la socket */
+
         if ((socket_descriptor = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
             perror("erreur : impossible de creer la socket de connexion avec le client.");
             exit(1);
@@ -350,10 +320,9 @@ ntohs(adresse_locale.sin_port) /*ntohs(ptr_service->s_port)*/);
 
             longueur_adresse_courante = sizeof(adresse_client_courant);
 /* adresse_client_courant sera renseignée par accept via les infos du connect */
-            if ((nouv_socket_descriptor =
-                accept(socket_descriptor,
-                    (sockaddr*)(&adresse_client_courant),
-                    &longueur_adresse_courante))
+            if ((nouv_socket_descriptor = accept(socket_descriptor,
+                (sockaddr*)(&adresse_client_courant),
+                &longueur_adresse_courante))
                 < 0) {
                 perror("erreur : impossible d'accepter la connexion avec le client.");
             exit(1);
@@ -361,14 +330,7 @@ ntohs(adresse_locale.sin_port) /*ntohs(ptr_service->s_port)*/);
 /* traitement du message */
 
 //--------------
-/*
-struct varRenvoi *var;
 
-var = malloc(sizeof(struct varRenvoi));
-(*var).soc = (int**) &tabentier;
-(*var).compteurTab = (int *)&compteurTab;
-(*var).position = (int *)position;
-*/
         printf("nouveauClient : %d \n",nouv_socket_descriptor);
         char welcome[] = "Bienvenue sur le chan";
         write(nouv_socket_descriptor,welcome,strlen(welcome)+1);
@@ -377,6 +339,6 @@ var = malloc(sizeof(struct varRenvoi));
         pthread_t threadEcoute;
         pthread_create (&threadEcoute, NULL, ecoute, (void*)nouv_socket_descriptor);
         pthread_join(threadSock, NULL);
-       // pthread_join(threadEcoute, NULL);
+// pthread_join(threadEcoute, NULL);
     }
 }
