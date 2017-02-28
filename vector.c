@@ -10,14 +10,7 @@ void vector_init(vector *v)
     v->size = 0;
     v->count = 0;
 }
-void vector_init_ps(vector *v)
-{
-    v->count = 0;
-    v->size = 10;
-    v->data = malloc(sizeof(void*) * v->size);
-    memset(v->data, '\0', sizeof(void*) * v->size);
-    v->count = v->size;
-}
+
 int vector_count(vector *v)
 {
     return v->count;
@@ -64,7 +57,9 @@ void vector_set(vector *v, int index, void *e)
         v->data = realloc(v->data, sizeof(int) * v->size);
     }
 
-    v->data[index] = e;
+    char a[20];
+    strcpy(a,e);
+    v->data[index] = a;
 }
 
 void *vector_get(vector *v, int index)
@@ -104,6 +99,62 @@ void vector_free(vector *v)
 {
     free(v->data);
 }
+
+void vector_init_ps(vector *v)
+{
+    v->count = 0;
+    v->size = 10;
+    v->data = malloc(sizeof(void*) * v->size);
+    memset(v->data, '\0', sizeof(void*) * v->size);
+    v->count = v->size;
+
+    int i;
+    char an[20] = "client";
+    
+    for (i = 0; i < v->size; ++i){
+        //v->data[i] = an;
+        vector_set_ps(v,i,an);
+        printf("init pseudo %d : %s\n", i, vector_get(v,i));
+        //an = "";
+    }
+
+    for (i = 0; i < v->size; ++i){
+        printf("init pseudo %d : %s\n", i, v->data[i]);
+    }
+}
+void vector_add_ps(vector *v)
+{
+    if (v->size == v->count) {
+        v->size *= 2;
+        v->data = realloc(v->data, sizeof(void*) * v->size);
+    }
+    /*
+    int i;
+    char in[10];
+    char an[20] = "client";
+
+    for (i = v->count ; i < v->size; ++i){
+        strcpy(an,"client");
+        sprintf(in, "%d", i);
+        strcat(an, " ");
+        strcat(an, in);
+        v->data[i] = an;
+    }
+    */
+    v->count = v->size;
+}
+
+void vector_set_ps(vector *v, int index, void *e)
+{
+    if (index >= v->count) {
+        vector_add_ps(v);
+    }
+    v->data[index] = e;
+}
+
+
+
+
 /*
 int main(void)
 {

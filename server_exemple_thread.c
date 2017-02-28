@@ -30,8 +30,11 @@ int * tabentier = {0};
 int position=0;
 
 vector v;
-vector pseudo;
-
+char pseudo[10][20] = {0};
+/*
+v->size *= 2;
+v->data = realloc(v->data, sizeof(void*) * v->size);
+*/
 /* --- TODO---
 * Affecter un pseudo au clients
 * Envoi de messages privés
@@ -79,21 +82,23 @@ void * ecoute (void * arg){
 //for(i = 0; i < compteurTab; ++i){
         if ((longueur = read(client, buffer, sizeof(buffer))) < 0) {return;}
         else{
-            printf("message lu : %s \n", buffer);
 
             buffer[longueur] ='\0';
+            char buf2[256];
+            strcpy(buf2, buffer);
 
             char p1[50];
-            char p2[50];
+            char p2[20];
             char p3[50] = "";
             int compteur = 0;
             char * pch;
-            printf ("Splitting string \"%s\" into tokens:\n",buffer);
-            pch = strtok (buffer," ");
+            printf("buffer avant : %s\n", buffer);
+            printf ("Splitting string \"%s\" into tokens:\n",buf2);
+            pch = strtok (buf2," ");
 
             while (pch != NULL)
             {
-                printf ("%s\n",pch);
+                //printf ("%s\n",pch);
                 if(compteur == 0){
                     strcpy(p1, pch);
                     ++compteur;
@@ -111,7 +116,8 @@ void * ecoute (void * arg){
             }
             printf("p1 : %s\n", p1);
             printf("p2 : %s\n", p2);
-            printf("p3 : %s\n", p3  );
+            printf("p3 : %s\n", p3);
+            printf("buffer apres : %s\n", buffer);
 
             char quit[] = "/q"; // permet au client de quitter
             char list[] = "/l"; // liste les clients connectés
@@ -120,7 +126,8 @@ void * ecoute (void * arg){
             if(strcmp(buffer,quit) == 0){
                 printf("quit \n");
                 suppr(client);
-                vector_set(&pseudo, client, "");
+                strcpy(pseudo[client], "anonimous");
+                //vector_set(&pseudo, client, "");
                 close(client);
                 t = false;
             }
@@ -131,19 +138,30 @@ void * ecoute (void * arg){
             //sleep(1);
                 int i;
                 for (i = 0; i < vector_count(&v); i++) {
-                    char str[50];
+                    printf("client : \n");
+                    printf("client %d : %s\n",i, pseudo[i]);
+                    write(client,pseudo[(int)vector_get_int(&v, i)],21);
+
+                    /*char str[50];
                     sprintf(str, "%d", (int)vector_get_int(&v, i));
-                    write(client,str,strlen(str)+1);
+                    write(client,str,strlen(str)+1);*/
+                   // write(client,vector_get(&pseudo,(int)vector_get_int(&v, i)),21);
                 }
             }
             else if(strcmp(p1,pseu) == 0){
                 printf(" ------ pseudo ------  \n");
-                vector_set(&pseudo, client, p2);
-                int i;
+                printf("p2 : %s\n", p2);
+                //vector_set_ps(&pseudo, client, p2);
+                
+                strcpy(pseudo[client], p2);
+                printf("pseudo[i] : %s\n", pseudo[client]);
+                //int i;
+/*
                 for (i = 0; i < vector_count(&pseudo); i++) {
                     char str[50];
-                    printf("test : %s ", (char*)vector_get(&v, i));
+                    printf("test : %s ", (char*)vector_get(&pseudo, i));
                 }
+                */
             }
 
 /* --- MSG PRIVE ---
@@ -180,8 +198,12 @@ printf("message envoye. \n");
 /* mise en attente du programme pour simuler un delai de transmission */
 // sleep(1);
                 int i;
+                char str[200];
+                sprintf(str, "%d", client);
+                strcat(str, " : ");
+                strcat(str, buffer);
                 for (i = 0; i < vector_count(&v); i++) {
-                    write((int)vector_get_int(&v, i),buffer,strlen(buffer)+1);
+                    write((int)vector_get_int(&v, i),str,strlen(str)+1);
                 }
             }
 
@@ -242,17 +264,20 @@ main(int argc, char **argv) {
 // --- vector ---
 
     vector_init(&v);
-    vector_init_ps(&pseudo);
-    /*
+    //vector_init_ps(&pseudo);
+    
     int m;
     for(m=0;m<10;++m){
         char str[10];
         char num[6];
-
         strcpy(str,  "anonimous ");
         sprintf(num, "%d", m);
         strcat(str, num);
         strcpy(pseudo[m], str);
+    }
+/*
+    for(m =0 ; m<10;++m){
+        printf("pseudo %d : %s\n",m, pseudo[m]);
     }
     */
 /*

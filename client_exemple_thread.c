@@ -74,9 +74,9 @@ void * void_reception(void * arg){
     /* lecture de la reponse en provenance du serveur */
 
     while((longueur = read(socket_descriptor, buffer, sizeof(buffer))) > 0) {
-        printf("\nserveur : \n");
+        //printf("\nserveur : ");
         write(1,buffer,longueur);
-        printf("\nMessage : \n");
+        printf("\n");
     }
     
 // ------------------------------
