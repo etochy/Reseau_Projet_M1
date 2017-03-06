@@ -139,8 +139,9 @@ void * ecoute (void * arg){
                 int i;
                 for (i = 0; i < vector_count(&v); i++) {
                     printf("client : \n");
-                    printf("client %d : %s\n",i, pseudo[i]);
-                    write(client,pseudo[(int)vector_get_int(&v, i)],21);
+                    printf("client %d : %s\n",(int)vector_get_int(&v, i), pseudo[(int)vector_get_int(&v, i)]);
+                    printf("size : %d\n", sizeof(pseudo[(int)vector_get_int(&v, i)]));
+                    write(client,pseudo[(int)vector_get_int(&v, i)],sizeof(pseudo[(int)vector_get_int(&v, i)])+1);
 
                     /*char str[50];
                     sprintf(str, "%d", (int)vector_get_int(&v, i));
@@ -152,8 +153,8 @@ void * ecoute (void * arg){
                 printf(" ------ pseudo ------  \n");
                 printf("p2 : %s\n", p2);
                 //vector_set_ps(&pseudo, client, p2);
-                
                 strcpy(pseudo[client], p2);
+                pseudo[client][sizeof(p2)+1]='\0';
                 printf("pseudo[i] : %s\n", pseudo[client]);
                 //int i;
 /*
