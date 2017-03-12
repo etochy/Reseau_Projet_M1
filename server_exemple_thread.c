@@ -16,6 +16,9 @@ Serveur à lancer avant le client
 #include "vector.h"
 
 #define TAILLE_MAX_NOM 256
+#define TAILLE_BUF 256
+#define TAILLE_PSEUDO 20
+
 typedef struct sockaddr sockaddr;
 typedef struct sockaddr_in sockaddr_in;
 typedef struct hostent hostent;
@@ -73,7 +76,7 @@ void suppr(int c){
 
 void * ecoute (void * arg){
 
-    char buffer[256];
+    char buffer[TAILLE_BUF];
     int longueur;
 
     int * tmp = (int *)arg;
@@ -87,16 +90,16 @@ void * ecoute (void * arg){
         else{
 
             buffer[longueur] ='\0';
-            char buf2[256];
+            char buf2[TAILLE_BUF];
             strcpy(buf2, buffer);
 
-            char p1[50] = {0};
-            char p2[20] = {0};
-            char p3[200] = {0};
+            char p1[TAILLE_BUF] = {0};
+            char p2[TAILLE_BUF] = {0};
+            char p3[TAILLE_BUF] = {0};
             int compteur = 0;
             char * pch;
-            printf("buffer avant : %s\n", buffer);
-            printf ("Splitting string \"%s\" into tokens:\n",buf2);
+            //printf("buffer avant : %s\n", buffer);
+            //printf ("Splitting string \"%s\" into tokens:\n",buf2);
             pch = strtok (buf2," ");
 
             while (pch != NULL)
@@ -147,16 +150,16 @@ else if(strcmp(buffer,list) == 0){
         printf("client %d : %s\n",(int)vector_get_int(&v, i), pseudo[(int)vector_get_int(&v, i)]);
         printf("size : %d\n", sizeof(pseudo[(int)vector_get_int(&v, i)]));
 // write(client,pseudo[(int)vector_get_int(&v, i)],sizeof(pseudo[(int)vector_get_int(&v, i)]));
-        write(client,pseudo[(int)vector_get_int(&v, i)],20);
+        write(client,pseudo[(int)vector_get_int(&v, i)],TAILLE_PSEUDO);
         write(client,"\n",1);
 /*char str[50];
 sprintf(str, "%d", (int)vector_get_int(&v, i));
 write(client,str,strlen(str)+1);*/
 // write(client,vector_get(&pseudo,(int)vector_get_int(&v, i)),21);
     }
-    memset(p1, 0, 50);
-    memset(p2, 0, 20);
-    memset(p3, 0, 200);
+    memset(p1, 0, TAILLE_BUF);
+    memset(p2, 0, TAILLE_BUF);
+    memset(p3, 0, TAILLE_BUF);
 }
 else if(strcmp(p1,pseu) == 0){
 
@@ -165,7 +168,7 @@ else if(strcmp(p1,pseu) == 0){
         printf("p2 : %s\n", p2);
 
 //memset(pseudo[client], 0, sizeof(pseudo[client]));
-        memset(pseudo[client], 0, 20);
+        memset(pseudo[client], 0, TAILLE_PSEUDO);
 //vector_set_ps(&pseudo, client, p2);
         strcpy(pseudo[client], p2);
         printf("size : %d\n",sizeof(p2) );
@@ -189,9 +192,9 @@ printf("test : %s ", (char*)vector_get(&pseudo, i));
     }
 
 
-    memset(p1, 0, 50);
-    memset(p2, 0, 20);
-    memset(p3, 0, 200);
+    memset(p1, 0, TAILLE_BUF);
+    memset(p2, 0, TAILLE_BUF);
+    memset(p3, 0, TAILLE_BUF);
 }
 
 else if(strcmp(p1,priv) == 0){
@@ -203,10 +206,10 @@ else if(strcmp(p1,priv) == 0){
         printf("i : %d\n", i);
         if(strcmp(pseudo[i],p2) == 0){
 //bon pseudo
-            printf("message apres traitement : %s \n", buffer);
-            printf("renvoi du message traite.\n");
-            write(i,p3,strlen(p3)+1);
-            printf("message envoye. \n");
+            char str[TAILLE_BUF + TAILLE_PSEUDO + 10]={0};
+            sprintf(str, "(prive)%s : ", pseudo[client]);
+            strcat(str, p3);
+            write(i,str,strlen(str)+1);
             fail = false;
         }
     }
@@ -214,10 +217,15 @@ else if(strcmp(p1,priv) == 0){
         char er[] = "Message prive impossible"; 
         write(client,er,sizeof(er));
     }
-
-    memset(p1, 0, 50);
-    memset(p2, 0, 20);
-    memset(p3, 0, 200);
+    else{
+        char str[TAILLE_BUF + TAILLE_PSEUDO + 10]={0};
+        sprintf(str, "(prive)%s : ", pseudo[client]);
+        strcat(str, p3);
+        write(client,str,strlen(str)+1);
+    }
+    memset(p1, 0, TAILLE_BUF);
+    memset(p2, 0, TAILLE_BUF);
+    memset(p3, 0, TAILLE_BUF);
 }
 
 
@@ -228,17 +236,16 @@ else{
 /* mise en attente du programme pour simuler un delai de transmission */
 // sleep(1);
     int i;
-    char str[256]={0};
-    sprintf(str, "%s", pseudo[client]);
-    strcat(str, " : ");
+    char str[TAILLE_BUF]={0};
+    sprintf(str, "%s : ", pseudo[client]);
     strcat(str, buffer);
     for (i = 0; i < vector_count(&v); i++) {
         write((int)vector_get_int(&v, i),str,strlen(str)+1);
     }
 
-    memset(p1, 0, 50);
-    memset(p2, 0, 20);
-    memset(p3, 0, 200);
+    memset(p1, 0, TAILLE_BUF);
+    memset(p2, 0, TAILLE_BUF);
+    memset(p3, 0, TAILLE_BUF);
 }
 
 }
@@ -254,7 +261,7 @@ pthread_exit(NULL);
 void * renvoi (void * varV) {
 //    struct varRenvoi *var = (struct varRenvoi*)varV;
 
-    char buffer[256];
+    char buffer[TAILLE_BUF];
     int longueur;
 
     int * tmp = (int *)varV;
@@ -267,14 +274,16 @@ void * renvoi (void * varV) {
 
     if(client >= sizePseudo){
         sizePseudo = sizePseudo*2;
-        printf("NTM1");
-        pseudo = realloc(pseudo, sizePseudo);
-        printf("NTM2");
+        printf("avant 1er realloc");
+
+        pseudo = realloc(pseudo, 20);
+        printf("apres 1er realloc");
 //Allocate memory for the new string item in the array
         int i;
         for (i = (sizePseudo/2)-1; i < sizePseudo; i++){
-            printf("NTM3");
-            pseudo[i] = malloc(21);
+            printf("if+realloc : %d", i);
+            pseudo[i] = malloc(TAILLE_PSEUDO+1);
+            sprintf(pseudo[i], "anonimous%d", i);
         }
     }
 
@@ -316,9 +325,7 @@ main(int argc, char **argv) {
     pseudo = malloc(sizePseudo * sizeof(*pseudo));
     int i;
     for (i = 0; i < sizePseudo; i++){
-        printf("test1 : %d\n",254*sizeof(char));
-        pseudo[i] = malloc(21);
-        printf("test2 : %d\n",sizeof(pseudo[i]));
+        pseudo[i] = malloc(TAILLE_PSEUDO+1);
         sprintf(pseudo[i], "anonimous%d", i);
     }
 
