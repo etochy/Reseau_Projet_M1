@@ -9,6 +9,7 @@ client <adresse-serveur> <message-a-transmettre>
 #include <netdb.h>
 #include <string.h>
 #include <pthread.h>
+#include <signal.h>
 
 typedef struct sockaddr 
 sockaddr;
@@ -66,7 +67,17 @@ void clean (char *chaine)
 }
 
 //----------------------------
+static volatile int keepRunning = 1;
 
+void intHandler(int dummy) {
+    keepRunning = 0;
+    printf("serieu gros?\n");
+    write(socket_descriptor, "/q",10);
+    printf("connexion avec le serveur fermee, fin du programme.\n");
+        close(socket_descriptor);
+        keepRunning = 0;
+        exit(0); 
+}
 
 void * void_reception(void * arg){
 // --------------- Thread reception ----------------
@@ -75,7 +86,9 @@ void * void_reception(void * arg){
 
     while((longueur = read(socket_descriptor, buffer, sizeof(buffer))) > 0) {
         //printf("\nserveur : ");
+        //printf("\ncoucou%s",buffer);
         write(1,buffer,longueur);
+        memset(buffer, 0, 256);
         printf("\n");
     }
     
@@ -87,17 +100,28 @@ void * void_envoi(void * args){
 // --------------- Thread envoi ----------------
     char quit[40] = "/q";
 
-    /* envoi du message vers le serveur */
-    if ((write(socket_descriptor, msg, strlen(msg))) < 0) {
-        perror("erreur : impossible d'ecrire le message destine au serveur.");
-        exit(1);
-    }
+    if(keepRunning == 1){
+        /* envoi du message vers le serveur */
+        if ((write(socket_descriptor, msg, strlen(msg))) <= 0) {
+            perror("erreur : impossible d'ecrire le message destine au serveur.");
+            exit(0);
+        }
 
-    if(strcmp(msg,quit) == 0){
+        if(strcmp(msg,quit) == 0){
+            printf("connexion avec le serveur fermee, fin du programme.\n");
+            close(socket_descriptor);
+            keepRunning = 0;
+            exit(0);        
+        }
+    }
+    else{
         printf("connexion avec le serveur fermee, fin du programme.\n");
         close(socket_descriptor);
+        keepRunning = 0;
         exit(0);        
+        
     }
+    
 
     /* mise en attente du prgramme pour simuler un delai de transmission */
     //sleep(3);
@@ -164,6 +188,9 @@ exit(1);
 
 
     pthread_create(&th_reception, NULL, void_reception, NULL);
+    struct sigaction act;
+    act.sa_handler = intHandler;
+    sigaction(SIGINT, &act, NULL);
     while(1){
         //printf("\nMessage : \n");
         fgets(msg, sizeof msg, stdin);

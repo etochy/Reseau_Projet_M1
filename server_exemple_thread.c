@@ -86,7 +86,15 @@ void * ecoute (void * arg){
 // int i = 0;
 //if(compteurTab != 0){
 //for(i = 0; i < compteurTab; ++i){
-        if ((longueur = read(client, buffer, sizeof(buffer))) < 0) {return;}
+        if ((longueur = read(client, buffer, sizeof(buffer))) < 0) {
+            printf("quit %s\n",buffer);
+            suppr(client);
+            strcpy(pseudo[client], "anonimous");
+//vector_set(&pseudo, client, "");
+            close(client);
+        }
+
+
         else{
 
             buffer[longueur] ='\0';
@@ -98,8 +106,8 @@ void * ecoute (void * arg){
             char p3[TAILLE_BUF] = {0};
             int compteur = 0;
             char * pch;
-            //printf("buffer avant : %s\n", buffer);
-            //printf ("Splitting string \"%s\" into tokens:\n",buf2);
+//printf("buffer avant : %s\n", buffer);
+//printf ("Splitting string \"%s\" into tokens:\n",buf2);
             pch = strtok (buf2," ");
 
             while (pch != NULL)
@@ -125,144 +133,149 @@ void * ecoute (void * arg){
             printf("p3 : %s\n", p3);
             printf("buffer apres : %s\n", buffer);
 
-char quit[] = "/q"; // permet au client de quitter
-char list[] = "/l"; // liste les clients connectés
-char priv[] = "/p"; // envoi d'un msg privé a un au client
-char pseu[] = "/n"; // changement de pseudo
-char help[] = "/h"; // list commandes
+    char quit[] = "/q"; // permet au client de quitter
+    char list[] = "/l"; // liste les clients connectés
+    char priv[] = "/p"; // envoi d'un msg privé a un au client
+    char pseu[] = "/n"; // changement de pseudo
+    char help[] = "/h"; // list commandes
 
-if(strcmp(buffer,quit) == 0){
-    printf("quit \n");
-    suppr(client);
-    strcpy(pseudo[client], "anonimous");
-//vector_set(&pseudo, client, "");
-    close(client);
-    t = false;
-}
-else if(strcmp(buffer,help) == 0){
-    char h[] = "Commandes : \n- /q : quit\n- /l : liste des clients\n- /p : private message\n- /n : changement de pseudo\n- /h : help";
-    write(client,h,sizeof(h));
-}
-else if(strcmp(buffer,list) == 0){
-    printf("list \n");
-    buffer[longueur] ='\0';
-/* mise en attente du programme pour simuler un delai de transmission */
-//sleep(1);
-    int i;
-    for (i = 0; i < vector_count(&v); i++) {
-        printf("client : \n");
-        printf("client %d : %s\n",(int)vector_get_int(&v, i), pseudo[(int)vector_get_int(&v, i)]);
-        printf("size : %d\n", sizeof(pseudo[(int)vector_get_int(&v, i)]));
-// write(client,pseudo[(int)vector_get_int(&v, i)],sizeof(pseudo[(int)vector_get_int(&v, i)]));
-        write(client,pseudo[(int)vector_get_int(&v, i)],TAILLE_PSEUDO);
-        write(client,"\n",1);
-/*char str[50];
-sprintf(str, "%d", (int)vector_get_int(&v, i));
-write(client,str,strlen(str)+1);*/
-// write(client,vector_get(&pseudo,(int)vector_get_int(&v, i)),21);
+    if(strcmp(buffer,quit) == 0){
+        printf("quit \n");
+        suppr(client);
+        strcpy(pseudo[client], "anonimous");
+    //vector_set(&pseudo, client, "");
+        close(client);
+        t = false;
     }
-    memset(p1, 0, TAILLE_BUF);
-    memset(p2, 0, TAILLE_BUF);
-    memset(p3, 0, TAILLE_BUF);
-}
-else if(strcmp(p1,pseu) == 0){
-
-    if(strcmp(p2,"") == 0){
-        printf(" ------ pseudo sans pseudo ------  \n");
-        char er[] = "Changement de pseudo impossible\n";
-        write(client,er,sizeof(er));
+    else if(strcmp(buffer,help) == 0){
+        char h[] = "Commandes : \n- /q : quit\n- /l : liste des clients\n- /p : private message\n- /n : changement de pseudo\n- /h : help";
+        write(client,h,sizeof(h));
     }
-    else if(strcmp(p3,"") == 0){
-        printf(" ------ pseudo ------  \n");
-        printf("p2 : %s\n", p2);
-
-//memset(pseudo[client], 0, sizeof(pseudo[client]));
-        memset(pseudo[client], 0, TAILLE_PSEUDO);
-//vector_set_ps(&pseudo, client, p2);
-        strcpy(pseudo[client], p2);
-        printf("size : %d\n",sizeof(p2) );
-
-//pseudo[client][sizeof(p2)+1]='\0';
-        printf("pseudo[i] : %s\n", pseudo[client]);
-        char er[] = "Pseudo modifie avec succes";
-        write(client,er,sizeof(er));
-//int i;
-/*
-for (i = 0; i < vector_count(&pseudo); i++) {
-char str[50];
-printf("test : %s ", (char*)vector_get(&pseudo, i));
-}
-*/
+    else if(strcmp(buffer,list) == 0){
+        printf("list \n");
+        buffer[longueur] ='\0';
+    /* mise en attente du programme pour simuler un delai de transmission */
+    //sleep(1);
+        int i;
+        for (i = 0; i < vector_count(&v); i++) {
+            printf("client : \n");
+            printf("client %d : %s\n",(int)vector_get_int(&v, i), pseudo[(int)vector_get_int(&v, i)]);
+            printf("size : %d\n", sizeof(pseudo[(int)vector_get_int(&v, i)]));
+    // write(client,pseudo[(int)vector_get_int(&v, i)],sizeof(pseudo[(int)vector_get_int(&v, i)]));
+            write(client,pseudo[(int)vector_get_int(&v, i)],TAILLE_PSEUDO);
+            write(client,"\n",1);
+    /*char str[50];
+    sprintf(str, "%d", (int)vector_get_int(&v, i));
+    write(client,str,strlen(str)+1);*/
+    // write(client,vector_get(&pseudo,(int)vector_get_int(&v, i)),21);
+        }
+        memset(p1, 0, TAILLE_BUF);
+        memset(p2, 0, TAILLE_BUF);
+        memset(p3, 0, TAILLE_BUF);
     }
-    else{
-        //Pseudo avec espace
-        printf(" ------ pseudo avec espace ------  \n");
-        char er[] = "Le pseudo de doit pas contenir d\'espaces, changement impossible\n";
-        write(client,er,sizeof(er));
+    else if(strcmp(p1,pseu) == 0){
 
+        if(strcmp(p2,"") == 0){
+            printf(" ------ pseudo sans pseudo ------  \n");
+            char er[] = "Changement de pseudo impossible\n";
+            write(client,er,sizeof(er));
+        }
+        else if(strcmp(p3,"") == 0){
+            printf(" ------ pseudo ------  \n");
+            printf("p2 : %s\n", p2);
+
+    //memset(pseudo[client], 0, sizeof(pseudo[client]));
+            memset(pseudo[client], 0, TAILLE_PSEUDO);
+    //vector_set_ps(&pseudo, client, p2);
+            strcpy(pseudo[client], p2);
+            printf("size : %d\n",sizeof(p2) );
+
+    //pseudo[client][sizeof(p2)+1]='\0';
+            printf("pseudo[i] : %s\n", pseudo[client]);
+            char er[] = "Pseudo modifie avec succes";
+            write(client,er,sizeof(er));
+    //int i;
+    /*
+    for (i = 0; i < vector_count(&pseudo); i++) {
+    char str[50];
+    printf("test : %s ", (char*)vector_get(&pseudo, i));
+    }
+    */
+        }
+        else{
+    //Pseudo avec espace
+            printf(" ------ pseudo avec espace ------  \n");
+            char er[] = "Le pseudo de doit pas contenir d\'espaces, changement impossible\n";
+            write(client,er,sizeof(er));
+
+        }
+
+        memset(p1, 0, TAILLE_BUF);
+        memset(p2, 0, TAILLE_BUF);
+        memset(p3, 0, TAILLE_BUF);
     }
 
-    memset(p1, 0, TAILLE_BUF);
-    memset(p2, 0, TAILLE_BUF);
-    memset(p3, 0, TAILLE_BUF);
-}
-
-else if(strcmp(p1,priv) == 0){
-    printf("msg prive \n");
-    int i = 0;
-    printf("taille : %d\n",sizePseudo );
-    bool fail = true;
-    for(i = 0; i < sizePseudo; ++i){
-        if(strcmp(pseudo[i],p2) == 0){
-//bon pseudo
+    else if(strcmp(p1,priv) == 0){
+        printf("msg prive \n");
+        int i = 0;
+        printf("taille : %d\n",sizePseudo );
+        bool fail = true;
+        for(i = 0; i < sizePseudo; ++i){
+            if(strcmp(pseudo[i],p2) == 0){
+    //bon pseudo
+                char str[TAILLE_BUF + TAILLE_PSEUDO + 10]={0};
+                sprintf(str, "(prive)%s : ", pseudo[client]);
+                strcat(str, p3);
+                write(i,str,strlen(str)+1);
+                fail = false;
+            }
+        }
+        if(fail == true){
+            char er[] = "Message prive impossible"; 
+            write(client,er,sizeof(er));
+        }
+        else{
             char str[TAILLE_BUF + TAILLE_PSEUDO + 10]={0};
             sprintf(str, "(prive)%s : ", pseudo[client]);
             strcat(str, p3);
-            write(i,str,strlen(str)+1);
-            fail = false;
+            write(client,str,strlen(str)+1);
         }
+        memset(p1, 0, TAILLE_BUF);
+        memset(p2, 0, TAILLE_BUF);
+        memset(p3, 0, TAILLE_BUF);
     }
-    if(fail == true){
-        char er[] = "Message prive impossible"; 
-        write(client,er,sizeof(er));
-    }
+
+
     else{
-        char str[TAILLE_BUF + TAILLE_PSEUDO + 10]={0};
-        sprintf(str, "(prive)%s : ", pseudo[client]);
-        strcat(str, p3);
-        write(client,str,strlen(str)+1);
-    }
-    memset(p1, 0, TAILLE_BUF);
-    memset(p2, 0, TAILLE_BUF);
-    memset(p3, 0, TAILLE_BUF);
-}
+        buffer[longueur] ='\0';
+        printf("message apres traitement : %s \n", buffer);
+        printf("renvoi du message traite.\n");
+    /* mise en attente du programme pour simuler un delai de transmission */
+    // sleep(1);
+        int i;
+        char str[TAILLE_BUF]={0};
+        sprintf(str, "%s : ", pseudo[client]);
+        strcat(str, buffer);
+        for (i = 0; i < vector_count(&v); i++) {
+            write((int)vector_get_int(&v, i),str,strlen(str)+1);
+        }
 
-
-else{
-    buffer[longueur] ='\0';
-    printf("message apres traitement : %s \n", buffer);
-    printf("renvoi du message traite.\n");
-/* mise en attente du programme pour simuler un delai de transmission */
-// sleep(1);
-    int i;
-    char str[TAILLE_BUF]={0};
-    sprintf(str, "%s : ", pseudo[client]);
-    strcat(str, buffer);
-    for (i = 0; i < vector_count(&v); i++) {
-        write((int)vector_get_int(&v, i),str,strlen(str)+1);
+        memset(p1, 0, TAILLE_BUF);
+        memset(p2, 0, TAILLE_BUF);
+        memset(p3, 0, TAILLE_BUF);
     }
 
-    memset(p1, 0, TAILLE_BUF);
-    memset(p2, 0, TAILLE_BUF);
-    memset(p3, 0, TAILLE_BUF);
 }
 
-}
 
 }
-//}
 //}
 //close(client);
+printf("quit \n");
+suppr(client);
+strcpy(pseudo[client], "anonimous");
+//vector_set(&pseudo, client, "");
+close(client);
 (void) arg;
 pthread_exit(NULL);
 }
@@ -290,7 +303,7 @@ void * renvoi (void * varV) {
         if(item){
             pseudo = item;
         }
-        
+
         printf("apres 1er realloc");
 //Allocate memory for the new string item in the array
         int i;
@@ -313,6 +326,7 @@ void * renvoi (void * varV) {
 
 /*------------------------------------------------------*/
 main(int argc, char **argv) {
+
     int
     socket_descriptor,
 /* descripteur de socket */
