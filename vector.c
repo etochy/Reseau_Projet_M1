@@ -4,6 +4,8 @@
 
 #include "vector.h"
 
+#define TAILLE 10;
+
 void vector_init(vector *v)
 {
     v->data = NULL;
@@ -19,14 +21,17 @@ int vector_count(vector *v)
 void vector_add_st(vector *v, void *e)
 {
     if (v->size == 0) {
-        v->size = 10;
+        v->size = TAILLE;
         v->data = malloc(sizeof(void*) * v->size);
         memset(v->data, '\0', sizeof(void*) * v->size);
     }
 
     if (v->size == v->count) {
         v->size *= 2;
-        v->data = realloc(v->data, sizeof(void*) * v->size);
+        int *item = realloc(v->data, sizeof(void*) * v->size);
+        if(item){
+            v->data = item;
+        }
     }
 
     v->data[v->count] = e;
@@ -36,14 +41,20 @@ void vector_add_st(vector *v, void *e)
 void vector_add_int(vector *v, int e)
 {
     if (v->size == 0) {
-        v->size = 10;
+        v->size = TAILLE;
         v->data = malloc(sizeof(int) * v->size);
         memset(v->data, '\0', sizeof(int) * v->size);
     }
 
     if (v->size == v->count) {
         v->size *= 2;
-        v->data = realloc(v->data, sizeof(int) * v->size);
+        printf("test 1");
+        int *item = realloc(v->data, sizeof(int*) * v->size);
+        printf("test 2");
+        if(item){
+            printf("test 3");
+            v->data = item;
+        }
     }
 
     v->data[v->count] = e;
@@ -54,7 +65,10 @@ void vector_set(vector *v, int index, void *e)
 {
     if (index >= v->count) {
         v->size *= 2;
-        v->data = realloc(v->data, sizeof(int) * v->size);
+        int *item = realloc(v->data, sizeof(void*) * v->size);
+        if(item){
+            v->data = item;
+        }
     }
 
     char a[20];
@@ -103,7 +117,7 @@ void vector_free(vector *v)
 void vector_init_ps(vector *v)
 {
     v->count = 0;
-    v->size = 10;
+    v->size = TAILLE;
     v->data = malloc(sizeof(void*) * v->size);
     memset(v->data, '\0', sizeof(void*) * v->size);
     v->count = v->size;
@@ -126,7 +140,10 @@ void vector_add_ps(vector *v)
 {
     if (v->size == v->count) {
         v->size *= 2;
-        v->data = realloc(v->data, sizeof(void*) * v->size);
+        int *item = realloc(v->data, sizeof(void*) * v->size);
+        if(item){
+            v->data = item;
+        }
     }
     /*
     int i;

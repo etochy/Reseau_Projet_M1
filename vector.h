@@ -2,7 +2,7 @@
 #define VECTOR_H__
 
 typedef struct vector_ {
-    void** data;
+    int* data;
     int size;
     int count;
 } vector;

@@ -139,6 +139,10 @@ if(strcmp(buffer,quit) == 0){
     close(client);
     t = false;
 }
+else if(strcmp(buffer,help) == 0){
+    char h[] = "Commandes : \n- /q : quit\n- /l : liste des clients\n- /p : private message\n- /n : changement de pseudo\n- /h : help";
+    write(client,h,sizeof(h));
+}
 else if(strcmp(buffer,list) == 0){
     printf("list \n");
     buffer[longueur] ='\0';
@@ -163,7 +167,12 @@ write(client,str,strlen(str)+1);*/
 }
 else if(strcmp(p1,pseu) == 0){
 
-    if(strcmp(p3,"") == 0){
+    if(strcmp(p2,"") == 0){
+        printf(" ------ pseudo sans pseudo ------  \n");
+        char er[] = "Changement de pseudo impossible\n";
+        write(client,er,sizeof(er));
+    }
+    else if(strcmp(p3,"") == 0){
         printf(" ------ pseudo ------  \n");
         printf("p2 : %s\n", p2);
 
@@ -175,6 +184,8 @@ else if(strcmp(p1,pseu) == 0){
 
 //pseudo[client][sizeof(p2)+1]='\0';
         printf("pseudo[i] : %s\n", pseudo[client]);
+        char er[] = "Pseudo modifie avec succes";
+        write(client,er,sizeof(er));
 //int i;
 /*
 for (i = 0; i < vector_count(&pseudo); i++) {
@@ -191,7 +202,6 @@ printf("test : %s ", (char*)vector_get(&pseudo, i));
 
     }
 
-
     memset(p1, 0, TAILLE_BUF);
     memset(p2, 0, TAILLE_BUF);
     memset(p3, 0, TAILLE_BUF);
@@ -203,7 +213,6 @@ else if(strcmp(p1,priv) == 0){
     printf("taille : %d\n",sizePseudo );
     bool fail = true;
     for(i = 0; i < sizePseudo; ++i){
-        printf("i : %d\n", i);
         if(strcmp(pseudo[i],p2) == 0){
 //bon pseudo
             char str[TAILLE_BUF + TAILLE_PSEUDO + 10]={0};
@@ -273,16 +282,21 @@ void * renvoi (void * varV) {
     }
 
     if(client >= sizePseudo){
+        printf("superieur");
         sizePseudo = sizePseudo*2;
-        printf("avant 1er realloc");
 
-        pseudo = realloc(pseudo, 20);
+        printf("avant 1er realloc");
+        int *item = realloc(pseudo, sizePseudo);
+        if(item){
+            pseudo = item;
+        }
+        
         printf("apres 1er realloc");
 //Allocate memory for the new string item in the array
         int i;
         for (i = (sizePseudo/2)-1; i < sizePseudo; i++){
             printf("if+realloc : %d", i);
-            pseudo[i] = malloc(TAILLE_PSEUDO+1);
+            pseudo[i] = malloc(TAILLE_PSEUDO);
             sprintf(pseudo[i], "anonimous%d", i);
         }
     }
@@ -325,7 +339,7 @@ main(int argc, char **argv) {
     pseudo = malloc(sizePseudo * sizeof(*pseudo));
     int i;
     for (i = 0; i < sizePseudo; i++){
-        pseudo[i] = malloc(TAILLE_PSEUDO+1);
+        pseudo[i] = malloc(TAILLE_PSEUDO);
         sprintf(pseudo[i], "anonimous%d", i);
     }
 
