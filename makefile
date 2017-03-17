@@ -1,7 +1,10 @@
 all : client_thread server_thread
 
+testNcurse : testNcurse.c
+	gcc -o testNcurse testNcurse.c vector.c -lncurses -lpthread
+
 client_thread : client_exemple_thread.c
-	gcc -o clientApp_thread client_exemple_thread.c -lpthread
+	gcc -o clientApp_thread client_exemple_thread.c vector.c -lpthread -lncurses
 
 server_thread : server_exemple_thread.c vector.h vector.c
 	gcc -o serverApp_thread server_exemple_thread.c vector.c -lpthread

@@ -148,8 +148,16 @@ void * ecoute (void * arg){
         t = false;
     }
     else if(strcmp(buffer,help) == 0){
-        char h[] = "Commandes : \n- /q : quit\n- /l : liste des clients\n- /p : private message\n- /n : changement de pseudo\n- /h : help";
-        write(client,h,sizeof(h));
+       // char h[] = "Commandes : \n- /q : quit\n- /l : liste des clients\n- /p : private message\n- /n : changement de pseudo\n- /h : help";
+
+        write(client,"Commandes :",256);
+        write(client,"- /q : quit",256);
+        write(client,"- /l : liste des clients",256);
+        write(client,"- /p : private message",256);
+        write(client,"- /n : changement de pseudo",256);
+        write(client,"- /h : help",256);
+
+
     }
     else if(strcmp(buffer,list) == 0){
         printf("list \n");
@@ -157,13 +165,14 @@ void * ecoute (void * arg){
     /* mise en attente du programme pour simuler un delai de transmission */
     //sleep(1);
         int i;
+        write(client,"Liste des clients connectés",256);
         for (i = 0; i < vector_count(&v); i++) {
             printf("client : \n");
             printf("client %d : %s\n",(int)vector_get_int(&v, i), pseudo[(int)vector_get_int(&v, i)]);
             printf("size : %d\n", sizeof(pseudo[(int)vector_get_int(&v, i)]));
     // write(client,pseudo[(int)vector_get_int(&v, i)],sizeof(pseudo[(int)vector_get_int(&v, i)]));
             write(client,pseudo[(int)vector_get_int(&v, i)],TAILLE_PSEUDO);
-            write(client,"\n",1);
+            
     /*char str[50];
     sprintf(str, "%d", (int)vector_get_int(&v, i));
     write(client,str,strlen(str)+1);*/
@@ -257,6 +266,7 @@ void * ecoute (void * arg){
         sprintf(str, "%s : ", pseudo[client]);
         strcat(str, buffer);
         for (i = 0; i < vector_count(&v); i++) {
+            printf("envoi\n");
             write((int)vector_get_int(&v, i),str,strlen(str)+1);
         }
 
@@ -269,13 +279,6 @@ void * ecoute (void * arg){
 
 
 }
-//}
-//close(client);
-printf("quit \n");
-suppr(client);
-strcpy(pseudo[client], "anonimous");
-//vector_set(&pseudo, client, "");
-close(client);
 (void) arg;
 pthread_exit(NULL);
 }
