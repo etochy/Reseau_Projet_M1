@@ -29,6 +29,7 @@ servent;
 
 // ---------- var global --------------
 int rec = 0;
+int i;
 int 
 socket_descriptor, 
 /* descripteur de socket */
@@ -65,7 +66,7 @@ void init_msgs(){
 
 void afficheMsg(char* msg){
 
-    for(int i=99 ; i>0; --i){
+    for(i=99 ; i>0; --i){
         //listBif[i] = malloc(256);
         sprintf(listBif[i],"%s", listBif[i-1]);
     }
@@ -171,7 +172,7 @@ void * affichageNcurses(void * arg){
             box(haut, ACS_VLINE, ACS_HLINE);
             mvwprintw(haut, 1, 1, "Serveur :");
 
-            for(int i=0; i<NB_LINE ; ++i){
+            for(i=0; i<NB_LINE ; ++i){
                 if((3*LINES)/4 -3 -i <= 1){
                 //print nothing
                 }else{
@@ -269,7 +270,7 @@ void afficheTest(){
     box(haut, ACS_VLINE, ACS_HLINE);
     mvwprintw(haut, 1, 1, "Serveur test :");
 
-    for(int i=0; i<NB_LINE ; ++i){
+    for(i=0; i<NB_LINE ; ++i){
         if((3*LINES)/4 -3 -i <= 1){
                 //print nothing
         }else{
