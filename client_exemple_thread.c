@@ -71,7 +71,7 @@ static volatile int keepRunning = 1;
 
 void intHandler(int dummy) {
     keepRunning = 0;
-    printf("serieu gros?\n");
+    //printf("serieu gros?\n");
     write(socket_descriptor, "/q",10);
     printf("connexion avec le serveur fermee, fin du programme.\n");
         close(socket_descriptor);
