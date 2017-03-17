@@ -11,7 +11,7 @@ client <adresse-serveur> <message-a-transmettre>
 #include <pthread.h>
 #include <signal.h>
 #include <ncurses.h>
-
+#include <semaphore.h> 
 #include "vector.h"
 
 #define MAX_BUF 141
@@ -26,7 +26,7 @@ hostent;
 typedef struct servent 
 servent;
 
-
+sem_t *mutex;
 // ---------- var global --------------
 int rec = 0;
 int i;
@@ -47,7 +47,8 @@ char * prog;
 char * host; 
 /* nom de la machine distante */
 char * mesg; 
-char msg[MAX_BUF] = {0};
+
+char msg[MAX_BUF]={0};
 
 WINDOW *haut, *bas;
 
@@ -109,6 +110,7 @@ void intHandler(int dummy) {
 
 void quitter(){
     keepRunning = 0;
+
     endwin();
     printf("Appuyer sur entrer pour fermer \n");
     return 0;
@@ -117,10 +119,12 @@ void quitter(){
 void * void_envoi(void * arg){
 // --------------- Thread envoi ----------------
     char quit[40] = "/q";
+    char * tmp = (char *)arg;
+    //char client[256] = tmp;
 
     if(keepRunning == 1){
         /* envoi du message vers le serveur */
-        if ((write(socket_descriptor, msg, strlen(msg))) <= 0) {
+        if ((write(socket_descriptor, tmp, strlen(tmp))) <= 0) {
             perror("erreur : impossible d'ecrire le message destine au serveur.");
             quitter();
             (void) arg;
@@ -129,7 +133,7 @@ void * void_envoi(void * arg){
             pthread_exit(NULL);
         }
 
-        if(strcmp(msg,quit) == 0){
+        if(strcmp(tmp,quit) == 0){
             printf("connexion avec le serveur fermee, fin du programme.\n");
             close(socket_descriptor);
             quitter();
@@ -154,7 +158,7 @@ void * void_envoi(void * arg){
     pthread_exit(NULL);
 }
 
-void * affichageNcurses(void * arg){
+void affichageNcurses(){
     
     pthread_t th_envoi;
     char *msg2= "CHAT";
@@ -193,22 +197,37 @@ void * affichageNcurses(void * arg){
             mvwprintw(bas, 1, 1, "Message (140 caracteres max):");
             move(3*LINES/4 + 2, 1);
             wrefresh(bas); 
-           // if(lec == 0){
+            //if(lec == 0){
+           //     ++lec;
                 b=fork();
-             //   lec = 1;
+            //}
                 if ( b== 0){
                     //strcpy(msg, "\0");
-                    memset(msg, 0, 256);
-                    getnstr(msg,140);
-                    if(strcmp(msg, "") > 0) {
-                        wrefresh(bas);
-                        pthread_create(&th_envoi, NULL, void_envoi, NULL);
-                        if(pthread_join(th_envoi,NULL)){
-                            perror("affiche");
-                                //mvwprintw(haut, 10,2,"hey 4");
-                            quitter();
+                    //sem_wait(&mutex); /* prologue */
+                   // if(*p == 0){
+                     //   *p = 1;
+                        memset(msg, 0, 256);
+                        char msgBis[256];
+                        if(lec == 0){
+                            lec =1;
+                            getnstr(msgBis,140);
+                            if(strlen(msgBis) > 0) {
+                                wrefresh(bas);
+                                pthread_create(&th_envoi, NULL, void_envoi, (void*)msgBis);
+                                if(pthread_join(th_envoi,NULL)){
+                                    perror("affiche");
+                                        //mvwprintw(haut, 10,2,"hey 4");
+                                    lec =0;
+                                    quitter();
+                                    exit(0);
+                                }
+                            }
+                            lec = 0;    
                         }
-                    }
+                        //*p=0;  
+                    //}
+                    //sem_post(&mutex);
+                    exit(0);
                 }
                 else{
                     //kill(b, SIGKILL);
@@ -225,41 +244,8 @@ void * affichageNcurses(void * arg){
         }
         
     }
-    (void) arg;
-    pthread_exit(NULL);
-    /*
-
-    pthread_t th_envoi;
-    char *msg2= "CHAT";
-    char *sm= "";
-    int taille= strlen(msg2);
-
-    while(keepRunning){
-        if(rec == 1){
-            wclear(bas);
-
-            attron(A_STANDOUT);
-            mvprintw(0, (COLS / 2) - (taille / 2), msg2);
-            attroff(A_STANDOUT);       
-            bas= subwin(stdscr, LINES / 4, COLS, 3*LINES / 4, 0); 
-            box(bas, ACS_VLINE, ACS_HLINE);
-
-            mvwprintw(bas, 1, 1, "Message (140 caracteres max):");
-            move(3*LINES/4 + 2, 1);
-            wrefresh(bas); 
-
-            strcpy(msg, "\0");
-            getstr(msg);
-
-            if(strcmp(msg, "\0")!=0) 
-                pthread_create(&th_envoi, NULL, void_envoi, NULL);
-            rec = 0;
-        }
-        
-    }
-    (void) arg;
-    pthread_exit(NULL);
-    */
+    //(void) arg;
+    //pthread_exit(NULL);
 }
 
 void afficheTest(){
@@ -302,7 +288,7 @@ void * void_reception(void * arg){
 int main(int argc, char **argv) {
 
 // --------------------------------------------------------------------
-
+    sem_init(&mutex, 0, 1);
     init_msgs();
     initscr();
 
@@ -370,8 +356,8 @@ exit(1);
         sigaction(SIGINT, &act, NULL);
 
         pthread_create(&th_reception, NULL, void_reception, NULL);
-        pthread_create(&th_affichage, NULL, affichageNcurses, NULL);
-
+        //pthread_create(&th_affichage, NULL, affichageNcurses, NULL);
+        affichageNcurses();
         // --------------------------------
 
         // --------------------------------
