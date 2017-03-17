@@ -150,12 +150,12 @@ void * ecoute (void * arg){
     else if(strcmp(buffer,help) == 0){
        // char h[] = "Commandes : \n- /q : quit\n- /l : liste des clients\n- /p : private message\n- /n : changement de pseudo\n- /h : help";
 
-        write(client,"Commandes :",256);
-        write(client,"- /q : quit",256);
-        write(client,"- /l : liste des clients",256);
-        write(client,"- /p : private message",256);
-        write(client,"- /n : changement de pseudo",256);
-        write(client,"- /h : help",256);
+        write(client,"Commandes :",13);
+        write(client,"- /q : quit",12);
+        write(client,"- /l : liste des clients",25);
+        write(client,"- /p : private message",23);
+        write(client,"- /n : changement de pseudo",28);
+        write(client,"- /h : help",12);
 
 
     }
@@ -165,11 +165,11 @@ void * ecoute (void * arg){
     /* mise en attente du programme pour simuler un delai de transmission */
     //sleep(1);
         int i;
-        write(client,"Liste des clients connectés",256);
+        write(client,"Liste des clients connectés : ",33);
         for (i = 0; i < vector_count(&v); i++) {
-            printf("client : \n");
-            printf("client %d : %s\n",(int)vector_get_int(&v, i), pseudo[(int)vector_get_int(&v, i)]);
-            printf("size : %d\n", sizeof(pseudo[(int)vector_get_int(&v, i)]));
+            //printf("client : \n");
+            //printf("client %d : %s\n",(int)vector_get_int(&v, i), pseudo[(int)vector_get_int(&v, i)]);
+            //printf("size : %d\n", sizeof(pseudo[(int)vector_get_int(&v, i)]));
     // write(client,pseudo[(int)vector_get_int(&v, i)],sizeof(pseudo[(int)vector_get_int(&v, i)]));
             write(client,pseudo[(int)vector_get_int(&v, i)],TAILLE_PSEUDO);
             

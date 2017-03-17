@@ -199,35 +199,35 @@ void affichageNcurses(){
             wrefresh(bas); 
             //if(lec == 0){
            //     ++lec;
-                b=fork();
-            //}
-                if ( b== 0){
-                    //strcpy(msg, "\0");
-                    //sem_wait(&mutex); /* prologue */
-                   // if(*p == 0){
-                     //   *p = 1;
-                        memset(msg, 0, 256);
-                        char msgBis[256];
-                        if(lec == 0){
-                            lec =1;
-                            getnstr(msgBis,140);
-                            if(strlen(msgBis) > 0) {
-                                wrefresh(bas);
-                                pthread_create(&th_envoi, NULL, void_envoi, (void*)msgBis);
-                                if(pthread_join(th_envoi,NULL)){
-                                    perror("affiche");
-                                        //mvwprintw(haut, 10,2,"hey 4");
-                                    lec =0;
-                                    quitter();
-                                    exit(0);
-                                }
-                            }
-                            lec = 0;    
+            b=fork();
+        //}
+            if ( b== 0){
+                //strcpy(msg, "\0");
+                //sem_wait(&mutex); /* prologue */
+               // if(*p == 0){
+                 //   *p = 1;
+                memset(msg, 0, 256);
+                char msgBis[256];
+                if(lec == 0){
+                    lec =1;
+                    getnstr(msgBis,140);
+                    if(strlen(msgBis) > 0) {
+                        wrefresh(bas);
+                        pthread_create(&th_envoi, NULL, void_envoi, (void*)msgBis);
+                        if(pthread_join(th_envoi,NULL)){
+                            perror("affiche");
+                                //mvwprintw(haut, 10,2,"hey 4");
+                            lec =0;
+                            quitter();
+                            exit(0);
                         }
-                        //*p=0;  
-                    //}
-                    //sem_post(&mutex);
-                    exit(0);
+                    }
+                    lec = 0;    
+                }
+                    //*p=0;  
+                //}
+                //sem_post(&mutex);
+                exit(0);
                 }
                 else{
                     //kill(b, SIGKILL);
