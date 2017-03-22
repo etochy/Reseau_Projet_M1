@@ -165,14 +165,15 @@ void * ecoute (void * arg){
     /* mise en attente du programme pour simuler un delai de transmission */
     //sleep(1);
         int i;
-        write(client,"Liste des clients connectés : ",33);
+        write(client,"Liste des clients connectés : ",32);
         for (i = 0; i < vector_count(&v); i++) {
+            sleep(1);
             //printf("client : \n");
             //printf("client %d : %s\n",(int)vector_get_int(&v, i), pseudo[(int)vector_get_int(&v, i)]);
             //printf("size : %d\n", sizeof(pseudo[(int)vector_get_int(&v, i)]));
     // write(client,pseudo[(int)vector_get_int(&v, i)],sizeof(pseudo[(int)vector_get_int(&v, i)]));
             write(client,pseudo[(int)vector_get_int(&v, i)],TAILLE_PSEUDO);
-            
+            printf("pseudo : %s\n", pseudo[(int)vector_get_int(&v, i)]);
     /*char str[50];
     sprintf(str, "%d", (int)vector_get_int(&v, i));
     write(client,str,strlen(str)+1);*/
