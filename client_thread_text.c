@@ -11,6 +11,8 @@ client <adresse-serveur> <message-a-transmettre>
 #include <pthread.h>
 #include <signal.h>
 
+#define MAX_BUF 141
+
 typedef struct sockaddr 
 sockaddr;
 typedef struct sockaddr_in 
@@ -40,11 +42,10 @@ char * prog;
 /* nom du programme */
 char * host; 
 /* nom de la machine distante */
-char * mesg; 
-char msg[40] = {0};
+
+char msg[MAX_BUF] = {0};
 
 // ------------------------------------
-// ------ fgets : ------------
 
 void purger(void)
 {
@@ -71,7 +72,7 @@ static volatile int keepRunning = 1;
 
 void intHandler(int dummy) {
     keepRunning = 0;
-    
+    //Quitte
     write(socket_descriptor, "/q",10);
     printf("connexion avec le serveur fermee, fin du programme.\n");
         close(socket_descriptor);
@@ -81,16 +82,11 @@ void intHandler(int dummy) {
 
 void * void_reception(void * arg){
 // --------------- Thread reception ----------------
-   // printf("th_reception \n");
     /* lecture de la reponse en provenance du serveur */
-
     while((longueur = read(socket_descriptor, buffer, sizeof(buffer))) > 0) {
-        //printf("\nserveur : ");
-        //printf("\ncoucou%s",buffer);
         write(1,buffer,longueur);
-	printf("\n");
-        memset(buffer, 0, 256);
-        
+        printf("\n");
+        memset(buffer, 0, 256);   
     }
     
 // ------------------------------
@@ -120,13 +116,8 @@ void * void_envoi(void * args){
         close(socket_descriptor);
         keepRunning = 0;
         exit(0);        
-        
     }
     
-
-    /* mise en attente du prgramme pour simuler un delai de transmission */
-    //sleep(3);
-    //printf("message envoye au serveur. \n");
     // ------------------------------
     pthread_exit(NULL);
 }
@@ -140,12 +131,9 @@ int main(int argc, char **argv) {
     }
     prog = argv[0];
     host = argv[1];
-    //mesg = argv[2];
 
     printf("nom de l'executable : %s \n", prog);
     printf("adresse du serveur  : %s \n", host);
-
- //   printf("message envoye      : %s \n", mesg);
 
     if ((ptr_host = gethostbyname(host)) == NULL) {
         perror("erreur : impossible de trouver le serveur a partir de son adresse.");
@@ -181,23 +169,24 @@ exit(1);
     }
     printf("connexion etablie avec le serveur. \n");
 
-    // TODO :  init thread
-
+    //init des threads
     pthread_t th_reception;
     pthread_t th_envoi;
-    //printf("init thread \n");
 
-
+    //lancement du thread de reception
     pthread_create(&th_reception, NULL, void_reception, NULL);
     struct sigaction act;
     act.sa_handler = intHandler;
+    //hadle du ctrl+c
     sigaction(SIGINT, &act, NULL);
+
     while(1){
-        //printf("\nMessage : \n");
+        //recupere le message de l'utilisatuer
         fgets(msg, sizeof msg, stdin);
         clean(msg);
-      //  scanf("%s",msg);
         printf("\n");
+
+        //création du thread d'envoi
         pthread_create(&th_envoi, NULL, void_envoi, NULL);
 
         if(pthread_join(th_envoi, NULL)){

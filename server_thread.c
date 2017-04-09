@@ -41,9 +41,12 @@ char **pseudo;
 
 bool checkClient(int client){
     int i;
+    //parcours du vecteur des clients
     for (i= 0; i < vector_count(&v); i++) {
         int x = (int)vector_get(&v, i);
+        //si le client est présent
         if(x == client){
+            //retourne vrai
             return true;
         }
     }
@@ -52,9 +55,12 @@ bool checkClient(int client){
 
 void suppr(int c){
     int i;
+    //parcours du vecteur des clients
     for (i = 0; i < vector_count(&v); i++) {
         int x = (int)vector_get_int(&v, i);
+        // si le client est celui que l'on veut supprimer
         if(x == c){
+            //le supprime
             vector_delete(&v, i);
             return;
         }
@@ -73,6 +79,7 @@ void * ecoute (void * arg){
 
         if ((longueur = read(client, buffer, sizeof(buffer))) < 0) {
             printf("quit %s\n",buffer);
+            //reinitialise le pseudo
             suppr(client);
             strcpy(pseudo[client], "anonimous");
             close(client);
@@ -91,28 +98,29 @@ void * ecoute (void * arg){
             int compteur = 0;
             char * pch;
             pch = strtok (buf2," ");
-
+            //split de la chaine de caracteres
             while (pch != NULL)
             {
+                //si c'est le 1er mot
                 if(compteur == 0){
+                    //le copier dans p1
                     strcpy(p1, pch);
                     ++compteur;
                 }
+                //si c'est le 2eme mot
                 else if(compteur == 1){
+                    //le copier dans p2
                     strcpy(p2, pch);
                     ++compteur;
                 }
                 else{
+                    //si 3eme mot ou plus, mettre dans p3
                     strcat(p3, pch);
                     strcat(p3, " ");
                     ++compteur;
                 }
                 pch = strtok (NULL, " ");
             }
-            printf("p1 : %s\n", p1);
-            printf("p2 : %s\n", p2);
-            printf("p3 : %s\n", p3);
-            printf("buffer apres : %s\n", buffer);
 
     char quit[] = "/q"; // permet au client de quitter
     char list[] = "/l"; // liste les clients connectés
@@ -122,21 +130,20 @@ void * ecoute (void * arg){
 
     if(strcmp(buffer,quit) == 0){
         printf("quit \n");
+        //reinitialise le pseudo
         suppr(client);
         strcpy(pseudo[client], "anonimous");
-    //vector_set(&pseudo, client, "");
         close(client);
         t = false;
     }
     else if(strcmp(buffer,help) == 0){
+        //envoi les commandes au client
         write(client,"Commandes :",13);
         write(client,"- /q : quit",12);
         write(client,"- /l : liste des clients",25);
         write(client,"- /p : private message",23);
         write(client,"- /n : changement de pseudo",28);
         write(client,"- /h : help",12);
-
-
     }
     else if(strcmp(buffer,list) == 0){
         printf("list \n");
@@ -144,11 +151,15 @@ void * ecoute (void * arg){
 
         int i;
         write(client,"Liste des clients connectés : ",32);
+        //pour tous les clients clients connectés
         for (i = 0; i < vector_count(&v); i++) {
+            //evite d'envoyer tous a la fois, plus de beug graphiques
             sleep(1);
+            //envoi les pseudo
             write(client,pseudo[(int)vector_get_int(&v, i)],TAILLE_PSEUDO);
             printf("pseudo : %s\n", pseudo[(int)vector_get_int(&v, i)]);
         }
+        //reset de p1 - p2 - p3
         memset(p1, 0, TAILLE_BUF);
         memset(p2, 0, TAILLE_BUF);
         memset(p3, 0, TAILLE_BUF);
@@ -157,18 +168,17 @@ void * ecoute (void * arg){
 
         if(strcmp(p2,"") == 0){
             printf(" ------ pseudo sans pseudo ------  \n");
+            //informe le client en cas de pseudo vide
             char er[] = "Changement de pseudo impossible\n";
             write(client,er,sizeof(er));
         }
         else if(strcmp(p3,"") == 0){
             printf(" ------ pseudo ------  \n");
-            printf("p2 : %s\n", p2);
-
+            //reinit du pseudo a 0
             memset(pseudo[client], 0, TAILLE_PSEUDO);
+            //enregistrement du nouveau pseudo
             strcpy(pseudo[client], p2);
-            printf("size : %d\n",sizeof(p2) );
-
-            printf("pseudo[i] : %s\n", pseudo[client]);
+            //informe le client
             char er[] = "Pseudo modifie avec succes";
             write(client,er,sizeof(er));
 
@@ -180,37 +190,44 @@ void * ecoute (void * arg){
             write(client,er,sizeof(er));
 
         }
-
+        //reset de p1 - p2 - p3
         memset(p1, 0, TAILLE_BUF);
         memset(p2, 0, TAILLE_BUF);
         memset(p3, 0, TAILLE_BUF);
     }
 
     else if(strcmp(p1,priv) == 0){
-        printf("msg prive \n");
         int i = 0;
-        printf("taille : %d\n",sizePseudo );
         bool fail = true;
         for(i = 0; i < sizePseudo; ++i){
+            //si le pseudo est valide
             if(strcmp(pseudo[i],p2) == 0){
     //bon pseudo
                 char str[TAILLE_BUF + TAILLE_PSEUDO + 10]={0};
+                //concat pseudo + message
                 sprintf(str, "(prive)%s : ", pseudo[client]);
                 strcat(str, p3);
+
+                //envoi du message
                 write(i,str,strlen(str)+1);
                 fail = false;
             }
         }
+        //si le pseudo n'est pas trouvé
         if(fail == true){
             char er[] = "Message prive impossible"; 
+            //envoi du message d'erreur
             write(client,er,sizeof(er));
         }
         else{
             char str[TAILLE_BUF + TAILLE_PSEUDO + 10]={0};
+            //concat pseudo + message
             sprintf(str, "(prive)%s : ", pseudo[client]);
             strcat(str, p3);
+            //envoi du message
             write(client,str,strlen(str)+1);
         }
+        //reset de p1 - p2 - p3
         memset(p1, 0, TAILLE_BUF);
         memset(p2, 0, TAILLE_BUF);
         memset(p3, 0, TAILLE_BUF);
@@ -224,13 +241,16 @@ void * ecoute (void * arg){
 
         int i;
         char str[TAILLE_BUF]={0};
+        //concatener pseudo + message
         sprintf(str, "%s : ", pseudo[client]);
         strcat(str, buffer);
+
+        //envoi du message a tous le monde
         for (i = 0; i < vector_count(&v); i++) {
-            printf("envoi\n");
             write((int)vector_get_int(&v, i),str,strlen(str)+1);
         }
 
+        //reset de p1 - p2 - p3
         memset(p1, 0, TAILLE_BUF);
         memset(p2, 0, TAILLE_BUF);
         memset(p3, 0, TAILLE_BUF);
@@ -249,38 +269,32 @@ void * renvoi (void * varV) {
     char buffer[TAILLE_BUF];
     int longueur;
 
+    //recuperation
     int * tmp = (int *)varV;
     int client = tmp;
 
-    printf("client : %d\n", client);
+    //si le 
     if(checkClient(client) == false){
+        //ajout du client dans le vecteur de sockets
         vector_add_int(&v, client);
     }
 
+    //si le nombre de client est superieur a la taille du tableau de pseudo
     if(client >= sizePseudo){
-        printf("superieur");
         sizePseudo = sizePseudo*2;
 
-        printf("avant 1er realloc");
+        //realloc du tableau
         int *item = realloc(pseudo, sizePseudo);
         if(item){
             pseudo = item;
         }
 
-        printf("apres 1er realloc");
-//Allocate memory for the new string item in the array
+//allocation et initialisation du tableau
         int i;
         for (i = (sizePseudo/2)-1; i < sizePseudo; i++){
-            printf("if+realloc : %d", i);
             pseudo[i] = malloc(TAILLE_PSEUDO);
             sprintf(pseudo[i], "anonimous%d", i);
         }
-    }
-
-    int i;
-    printf("first round:\n");
-    for (i = 0; i < vector_count(&v); i++) {
-        printf("client : %d -> %d\n", i, (int)vector_get_int(&v, i));
     }
 
     pthread_exit(NULL);
@@ -308,10 +322,10 @@ main(int argc, char **argv) {
     ptr_service;
 
 // --- vector ---
-
+    //initialisation du vectuer de sockets
     vector_init(&v);
-//vector_init_ps(&pseudo);
 
+// initialisation du tableau des pseudo
     pseudo = malloc(sizePseudo * sizeof(*pseudo));
     int i;
     for (i = 0; i < sizePseudo; i++){
@@ -329,6 +343,7 @@ main(int argc, char **argv) {
     gethostname(machine,TAILLE_MAX_NOM);
 /* recuperation du nom de la machine */
 
+//init thread de nouvelle connexion
     pthread_t threadSock;
 
 /* recuperation de la structure d'adresse en utilisant le nom */
@@ -384,20 +399,24 @@ ntohs(adresse_locale.sin_port) /*ntohs(ptr_service->s_port)*/);
                 &longueur_adresse_courante))
                 < 0) {
                 perror("erreur : impossible d'accepter la connexion avec le client.");
-            exit(1);
-        }
+                exit(1);
+            }
 /* traitement du message */
 
 //--------------
 
-        printf("nouveauClient : %d \n",nouv_socket_descriptor);
-        char welcome[] = "Bienvenue sur le chan";
-        write(nouv_socket_descriptor,welcome,strlen(welcome)+1);
+            printf("nouveauClient : %d \n",nouv_socket_descriptor);
+            char welcome[] = "Bienvenue sur le chan, /h pour help";
+            //envoi du message de bienvenue
+            write(nouv_socket_descriptor,welcome,strlen(welcome)+1);
+            //creation du thread
+            pthread_create (&threadSock, NULL, renvoi, (void*)nouv_socket_descriptor);
+            //initialisation du thread d'ecoute
+            pthread_t threadEcoute;
+            //creation du thread
+            pthread_create (&threadEcoute, NULL, ecoute, (void*)nouv_socket_descriptor);
+            //attente du thread de nouvelle connexion
+            pthread_join(threadSock, NULL);
 
-        pthread_create (&threadSock, NULL, renvoi, (void*)nouv_socket_descriptor);
-        pthread_t threadEcoute;
-        pthread_create (&threadEcoute, NULL, ecoute, (void*)nouv_socket_descriptor);
-        pthread_join(threadSock, NULL);
-
-    }
+        }
 }
