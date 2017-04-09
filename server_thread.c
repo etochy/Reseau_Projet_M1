@@ -35,20 +35,7 @@ int position=0;
 vector v;
 
 int sizePseudo = 10;
-//char pseudo[sizePseudo][20] = {0};
 char **pseudo;
-
-/*
-v->size *= 2;
-v->data = realloc(v->data, sizeof(void*) * v->size);
-*/
-/* --- TODO---
-* Gestion des erreurs
-* Realloc des erreurs
-*
-*/
-
-//--------------
 
 /*------------------------------------------------------*/
 
@@ -83,14 +70,11 @@ void * ecoute (void * arg){
     int client = tmp;
     bool t = true;
     while(t == true){
-// int i = 0;
-//if(compteurTab != 0){
-//for(i = 0; i < compteurTab; ++i){
+
         if ((longueur = read(client, buffer, sizeof(buffer))) < 0) {
             printf("quit %s\n",buffer);
             suppr(client);
             strcpy(pseudo[client], "anonimous");
-//vector_set(&pseudo, client, "");
             close(client);
         }
 
@@ -106,13 +90,10 @@ void * ecoute (void * arg){
             char p3[TAILLE_BUF] = {0};
             int compteur = 0;
             char * pch;
-//printf("buffer avant : %s\n", buffer);
-//printf ("Splitting string \"%s\" into tokens:\n",buf2);
             pch = strtok (buf2," ");
 
             while (pch != NULL)
             {
-//printf ("%s\n",pch);
                 if(compteur == 0){
                     strcpy(p1, pch);
                     ++compteur;
@@ -148,8 +129,6 @@ void * ecoute (void * arg){
         t = false;
     }
     else if(strcmp(buffer,help) == 0){
-       // char h[] = "Commandes : \n- /q : quit\n- /l : liste des clients\n- /p : private message\n- /n : changement de pseudo\n- /h : help";
-
         write(client,"Commandes :",13);
         write(client,"- /q : quit",12);
         write(client,"- /l : liste des clients",25);
@@ -162,22 +141,13 @@ void * ecoute (void * arg){
     else if(strcmp(buffer,list) == 0){
         printf("list \n");
         buffer[longueur] ='\0';
-    /* mise en attente du programme pour simuler un delai de transmission */
-    //sleep(1);
+
         int i;
         write(client,"Liste des clients connectés : ",32);
         for (i = 0; i < vector_count(&v); i++) {
             sleep(1);
-            //printf("client : \n");
-            //printf("client %d : %s\n",(int)vector_get_int(&v, i), pseudo[(int)vector_get_int(&v, i)]);
-            //printf("size : %d\n", sizeof(pseudo[(int)vector_get_int(&v, i)]));
-    // write(client,pseudo[(int)vector_get_int(&v, i)],sizeof(pseudo[(int)vector_get_int(&v, i)]));
             write(client,pseudo[(int)vector_get_int(&v, i)],TAILLE_PSEUDO);
             printf("pseudo : %s\n", pseudo[(int)vector_get_int(&v, i)]);
-    /*char str[50];
-    sprintf(str, "%d", (int)vector_get_int(&v, i));
-    write(client,str,strlen(str)+1);*/
-    // write(client,vector_get(&pseudo,(int)vector_get_int(&v, i)),21);
         }
         memset(p1, 0, TAILLE_BUF);
         memset(p2, 0, TAILLE_BUF);
@@ -194,23 +164,14 @@ void * ecoute (void * arg){
             printf(" ------ pseudo ------  \n");
             printf("p2 : %s\n", p2);
 
-    //memset(pseudo[client], 0, sizeof(pseudo[client]));
             memset(pseudo[client], 0, TAILLE_PSEUDO);
-    //vector_set_ps(&pseudo, client, p2);
             strcpy(pseudo[client], p2);
             printf("size : %d\n",sizeof(p2) );
 
-    //pseudo[client][sizeof(p2)+1]='\0';
             printf("pseudo[i] : %s\n", pseudo[client]);
             char er[] = "Pseudo modifie avec succes";
             write(client,er,sizeof(er));
-    //int i;
-    /*
-    for (i = 0; i < vector_count(&pseudo); i++) {
-    char str[50];
-    printf("test : %s ", (char*)vector_get(&pseudo, i));
-    }
-    */
+
         }
         else{
     //Pseudo avec espace
@@ -260,8 +221,7 @@ void * ecoute (void * arg){
         buffer[longueur] ='\0';
         printf("message apres traitement : %s \n", buffer);
         printf("renvoi du message traite.\n");
-    /* mise en attente du programme pour simuler un delai de transmission */
-    // sleep(1);
+
         int i;
         char str[TAILLE_BUF]={0};
         sprintf(str, "%s : ", pseudo[client]);
@@ -285,7 +245,6 @@ pthread_exit(NULL);
 }
 
 void * renvoi (void * varV) {
-//    struct varRenvoi *var = (struct varRenvoi*)varV;
 
     char buffer[TAILLE_BUF];
     int longueur;
@@ -328,7 +287,6 @@ void * renvoi (void * varV) {
 }
 /*------------------------------------------------------*/
 
-/*------------------------------------------------------*/
 main(int argc, char **argv) {
 
     int
@@ -361,27 +319,6 @@ main(int argc, char **argv) {
         sprintf(pseudo[i], "anonimous%d", i);
     }
 
-/*
-int m;
-for(m=0;m<10;++m){
-char str[10];
-char num[6];
-strcpy(str,  "anonimous");
-sprintf(num, "%d", m);
-strcat(str, num);
-strcpy(pseudo[m], str);
-}
-*/
-/*
-for(m =0 ; m<10;++m){
-printf("pseudo %d : %s\n",m, pseudo[m]);
-}
-*/
-/*
-for(m=0;m<10;++m){
-printf("pseudo : %d = %s\n",m,pseudo[m] );
-}
-*/
 // -------------------------------------------
 
 //  int* psocket_descriptor = &socket_descriptor;
@@ -461,6 +398,6 @@ ntohs(adresse_locale.sin_port) /*ntohs(ptr_service->s_port)*/);
         pthread_t threadEcoute;
         pthread_create (&threadEcoute, NULL, ecoute, (void*)nouv_socket_descriptor);
         pthread_join(threadSock, NULL);
-// pthread_join(threadEcoute, NULL);
+
     }
 }

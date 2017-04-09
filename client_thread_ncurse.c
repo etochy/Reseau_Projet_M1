@@ -68,12 +68,10 @@ void init_msgs(){
 void afficheMsg(char* msg){
 
     for(i=99 ; i>0; --i){
-        //listBif[i] = malloc(256);
         sprintf(listBif[i],"%s", listBif[i-1]);
     }
 
     sprintf(listBif[0],"%s",msg);
-    //afficheTest();
 
 }
 
@@ -120,7 +118,6 @@ void * void_envoi(void * arg){
 // --------------- Thread envoi ----------------
     char quit[40] = "/q";
     char * tmp = (char *)arg;
-    //char client[256] = tmp;
 
     if(keepRunning == 1){
         /* envoi du message vers le serveur */
@@ -148,7 +145,6 @@ void * void_envoi(void * arg){
         (void) arg;
         pthread_exit(NULL);       
     }
-
 
     /* mise en attente du prgramme pour simuler un delai de transmission */
     //sleep(3);
@@ -197,15 +193,10 @@ void affichageNcurses(){
             mvwprintw(bas, 1, 1, "Message (140 caracteres max):");
             move(3*LINES/4 + 2, 1);
             wrefresh(bas); 
-            //if(lec == 0){
-           //     ++lec;
             b=fork();
-        //}
+
             if ( b== 0){
-                //strcpy(msg, "\0");
-                //sem_wait(&mutex); /* prologue */
-               // if(*p == 0){
-                 //   *p = 1;
+
                 memset(msg, 0, 256);
                 char msgBis[256];
                 if(lec == 0){
@@ -216,7 +207,6 @@ void affichageNcurses(){
                         pthread_create(&th_envoi, NULL, void_envoi, (void*)msgBis);
                         if(pthread_join(th_envoi,NULL)){
                             perror("affiche");
-                                //mvwprintw(haut, 10,2,"hey 4");
                             lec =0;
                             quitter();
                             exit(0);
@@ -224,28 +214,15 @@ void affichageNcurses(){
                     }
                     lec = 0;    
                 }
-                    //*p=0;  
-                //}
-                //sem_post(&mutex);
+
                 exit(0);
                 }
-                else{
-                    //kill(b, SIGKILL);
-                }
-            
-// ----------------------------
-           
-/* traitement du message */
-
-// ----------------------------
-        
 
             rec = 0;
         }
         
     }
-    //(void) arg;
-    //pthread_exit(NULL);
+
 }
 
 void afficheTest(){
@@ -272,8 +249,7 @@ void * void_reception(void * arg){
     while(keepRunning){
     if((longueur = read(socket_descriptor, buffer, sizeof(buffer))) > 0) {
         afficheMsg(buffer);
-            //mvwprintw(haut, (3*LINES)/4 -3 -i,2,listBif[i]);
-        //afficheTest();
+  
         memset(buffer, 0, 256);
         rec = 1;
     }
@@ -360,8 +336,6 @@ exit(1);
         affichageNcurses();
         // --------------------------------
 
-        // --------------------------------
-        
         if(pthread_join(th_reception,NULL)){
             perror("affiche");
                 //mvwprintw(haut, 10,2,"hey 4");
